@@ -22,17 +22,17 @@ class Config:
         return self._default_config()
 
     def _default_config(self):
-        """Default configuration"""
+        """Default configuration with environment variable support"""
         return {
             'server': {
-                'host': '0.0.0.0',
-                'port': 8443,
-                'debug': True
+                'host': os.getenv('HOST', '0.0.0.0'),
+                'port': int(os.getenv('PORT', '8443')),
+                'debug': os.getenv('FLASK_ENV', 'development') != 'production'
             },
             'saml': {
-                'entity_id': 'https://dpp.example.com',
-                'sso_url': 'https://dpp.example.com/saml/sso',
-                'acs_url': 'https://dpp.example.com/saml/acs',
+                'entity_id': os.getenv('SAML_ENTITY_ID', 'https://dpp.example.com'),
+                'sso_url': os.getenv('SAML_SSO_URL', 'https://dpp.example.com/saml/sso'),
+                'acs_url': os.getenv('SAML_ACS_URL', 'https://dpp.example.com/saml/acs'),
                 'cert_file': 'certs/saml.crt',
                 'key_file': 'certs/saml.key',
                 'name_id_format': 'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress',
@@ -40,13 +40,13 @@ class Config:
             },
             'okta': {
                 'namespace': 'urn:okta:saml:2.0:DevicePosture',
-                'entity_id': 'http://www.okta.com/<your-okta-id>',
-                'acs_url': 'https://<your-okta-domain>/sso/saml2/<app-id>'
+                'entity_id': os.getenv('OKTA_ENTITY_ID', 'http://www.okta.com/<your-okta-id>'),
+                'acs_url': os.getenv('OKTA_ACS_URL', 'https://<your-okta-domain>/sso/saml2/<app-id>')
             },
             'device_checks': {
-                'require_managed': True,
-                'require_compliant': False,
-                'require_encrypted': False,
+                'require_managed': os.getenv('REQUIRE_MANAGED', 'true').lower() == 'true',
+                'require_compliant': os.getenv('REQUIRE_COMPLIANT', 'false').lower() == 'true',
+                'require_encrypted': os.getenv('REQUIRE_ENCRYPTED', 'false').lower() == 'true',
                 'allowed_os': ['Windows', 'macOS', 'iOS', 'Android', 'Linux'],
                 'min_os_versions': {
                     'Windows': '10.0',

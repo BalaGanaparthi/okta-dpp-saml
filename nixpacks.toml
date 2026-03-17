@@ -1,0 +1,16 @@
+[phases.setup]
+nixPkgs = ["python311", "libxml2", "libxslt"]
+
+[phases.install]
+cmds = [
+    "pip install --upgrade pip",
+    "pip install -r requirements.txt"
+]
+
+[phases.build]
+cmds = [
+    "python generate_certs.py"
+]
+
+[start]
+cmd = "python app.py"

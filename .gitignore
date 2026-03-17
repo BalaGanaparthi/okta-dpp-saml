@@ -40,6 +40,11 @@ certs/*.pem
 # Configuration (if contains secrets)
 config.local.yaml
 
+# Environment variables
+.env
+.env.local
+.env.*.local
+
 # Logs
 *.log
 logs/
