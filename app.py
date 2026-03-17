@@ -33,163 +33,485 @@ LOGIN_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Device Posture Provider - Authentication</title>
+    <title>Device Posture Verification</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        * {
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
         }
+
+        /* Animated background particles */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: particle-animation 20s linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes particle-animation {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-50px, -50px); }
+        }
+
         .container {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            padding: 40px;
-            max-width: 500px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 100px rgba(102, 126, 234, 0.1);
+            padding: 50px 40px;
+            max-width: 600px;
             width: 100%;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(10px);
+            animation: slideUp 0.5s ease-out;
         }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 64px;
+            margin-bottom: 15px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
         h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
+            color: #2d3748;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
+
         .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-        .info-section {
-            background: #f8f9fa;
-            border-left: 4px solid #667eea;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .info-section h3 {
-            margin-top: 0;
-            color: #333;
+            color: #718096;
             font-size: 16px;
+            font-weight: 400;
         }
-        .info-section p {
-            margin: 5px 0;
-            color: #555;
+
+        .info-badge {
+            background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 35px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #4a5568;
+            font-weight: 600;
             font-size: 14px;
         }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
+
+        .info-value {
+            color: #2d3748;
             font-weight: 500;
-        }
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
             font-size: 14px;
-            box-sizing: border-box;
         }
-        input:focus, select:focus {
-            outline: none;
+
+        .posture-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .posture-card {
+            background: white;
+            border: 3px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 30px 20px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .posture-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 0;
+        }
+
+        .posture-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .posture-card.selected {
             border-color: #667eea;
-        }
-        button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .posture-card.selected .icon {
+            color: white;
+        }
+
+        .posture-card.selected .label,
+        .posture-card.selected .description {
+            color: white;
+        }
+
+        .posture-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .posture-card:hover .icon {
+            transform: scale(1.1);
+        }
+
+        .posture-card.selected .icon {
+            transform: scale(1.15);
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+        }
+
+        .label {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .description {
+            font-size: 13px;
+            color: #718096;
+            line-height: 1.4;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #4a5568;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+            margin-right: 10px;
+        }
+
+        .submit-btn {
             width: 100%;
-            transition: transform 0.2s;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
         }
-        button:hover {
+
+        .submit-btn:hover:not(:disabled) {
             transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
         }
+
+        .submit-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .submit-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .submit-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
         .error {
-            background: #fee;
-            border-left: 4px solid #f44;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-            color: #c33;
+            background: linear-gradient(135deg, #fee 0%, #fdd 100%);
+            border-left: 4px solid #e53e3e;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 12px;
+            color: #c53030;
+            animation: shake 0.5s;
+            box-shadow: 0 4px 15px rgba(229, 62, 62, 0.2);
         }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .error strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+
         .help-text {
-            font-size: 12px;
-            color: #888;
-            margin-top: 5px;
+            text-align: center;
+            color: #a0aec0;
+            font-size: 13px;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .posture-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 35px 25px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+        }
+
+        /* Selection checkmark */
+        .checkmark {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s ease;
+        }
+
+        .posture-card.selected .checkmark {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .checkmark::after {
+            content: '✓';
+            color: #667eea;
+            font-size: 18px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🛡️ Device Posture Provider</h1>
-        <p class="subtitle">Secure Authentication with Device Verification</p>
+        <div class="header">
+            <div class="logo">🛡️</div>
+            <h1>Device Posture Verification</h1>
+            <p class="subtitle">Confirm your device security status</p>
+        </div>
 
         {% if error %}
         <div class="error">
-            <strong>Authentication Failed:</strong> {{ error }}
+            <strong>⚠️ Verification Failed</strong>
+            {{ error }}
         </div>
         {% endif %}
 
-        <div class="info-section">
-            <h3>SAML Request Information</h3>
-            <p><strong>From:</strong> {{ issuer }}</p>
-            <p><strong>User:</strong> {{ subject or 'Not specified' }}</p>
-            <p><strong>Device Posture Check:</strong> {{ 'Required' if device_posture_requested else 'Not Required' }}</p>
+        <div class="info-badge">
+            <div class="info-row">
+                <span class="info-label">Organization</span>
+                <span class="info-value">{{ issuer.split('/')[-1][:20] if issuer else 'Unknown' }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">User</span>
+                <span class="info-value">{{ subject or 'Not specified' }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Verification</span>
+                <span class="info-value">{{ 'Required ✓' if device_posture_requested else 'Optional' }}</span>
+            </div>
         </div>
 
-        <form method="POST" action="{{ action }}">
+        <form method="POST" action="{{ action }}" id="postureForm">
             <input type="hidden" name="SAMLRequest" value="{{ saml_request }}">
             <input type="hidden" name="RelayState" value="{{ relay_state }}">
+            <input type="hidden" name="is_managed" id="isManagedInput" value="">
+            <input type="hidden" name="is_compliant" id="isCompliantInput" value="">
 
-            <div class="form-group">
-                <label>Device ID *</label>
-                <input type="text" name="device_id" required
-                       placeholder="e.g., MANAGED-ABC123 or MDM-XYZ789">
-                <p class="help-text">For demo: use prefix MANAGED- or MDM- for managed devices</p>
+            <div class="section-title">Device Management Status</div>
+            <div class="posture-grid">
+                <div class="posture-card" onclick="selectOption('managed', true)" id="managedYes">
+                    <div class="checkmark"></div>
+                    <div class="icon">✅</div>
+                    <div class="label">Managed</div>
+                    <div class="description">Device is enrolled in MDM/UEM</div>
+                </div>
+                <div class="posture-card" onclick="selectOption('managed', false)" id="managedNo">
+                    <div class="checkmark"></div>
+                    <div class="icon">❌</div>
+                    <div class="label">Not Managed</div>
+                    <div class="description">Device is not managed</div>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label>Device Vendor *</label>
-                <input type="text" name="vendor" required placeholder="e.g., Apple, Dell, Samsung">
+            <div class="section-title">Compliance Status</div>
+            <div class="posture-grid">
+                <div class="posture-card" onclick="selectOption('compliant', true)" id="compliantYes">
+                    <div class="checkmark"></div>
+                    <div class="icon">🔒</div>
+                    <div class="label">Compliant</div>
+                    <div class="description">Meets security requirements</div>
+                </div>
+                <div class="posture-card" onclick="selectOption('compliant', false)" id="compliantNo">
+                    <div class="checkmark"></div>
+                    <div class="icon">🔓</div>
+                    <div class="label">Non-Compliant</div>
+                    <div class="description">Does not meet requirements</div>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label>Device Model *</label>
-                <input type="text" name="model" required placeholder="e.g., MacBook Pro, iPhone 15">
-            </div>
+            <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                <span>🚀 Continue to Application</span>
+            </button>
 
-            <div class="form-group">
-                <label>Operating System *</label>
-                <select name="os" required>
-                    <option value="">Select OS...</option>
-                    <option value="Windows">Windows</option>
-                    <option value="macOS">macOS</option>
-                    <option value="iOS">iOS</option>
-                    <option value="Android">Android</option>
-                    <option value="Linux">Linux</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>OS Version *</label>
-                <input type="text" name="os_version" required placeholder="e.g., 14.1, 11.0">
-            </div>
-
-            <button type="submit">Authenticate with Device Posture</button>
+            <p class="help-text">
+                Select your device management and compliance status to proceed with authentication
+            </p>
         </form>
     </div>
+
+    <script>
+        let selections = {
+            managed: null,
+            compliant: null
+        };
+
+        function selectOption(type, value) {
+            selections[type] = value;
+
+            // Update UI for managed
+            if (type === 'managed') {
+                document.getElementById('managedYes').classList.toggle('selected', value === true);
+                document.getElementById('managedNo').classList.toggle('selected', value === false);
+                document.getElementById('isManagedInput').value = value;
+            }
+
+            // Update UI for compliant
+            if (type === 'compliant') {
+                document.getElementById('compliantYes').classList.toggle('selected', value === true);
+                document.getElementById('compliantNo').classList.toggle('selected', value === false);
+                document.getElementById('isCompliantInput').value = value;
+            }
+
+            // Enable submit button if both are selected
+            const submitBtn = document.getElementById('submitBtn');
+            if (selections.managed !== null && selections.compliant !== null) {
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Prevent form submission if not all options selected
+        document.getElementById('postureForm').addEventListener('submit', function(e) {
+            if (selections.managed === null || selections.compliant === null) {
+                e.preventDefault();
+                alert('Please select both management and compliance status');
+            }
+        });
+    </script>
 </body>
 </html>
 """
@@ -302,7 +624,7 @@ def sso():
         request_data = saml_handler.parse_authn_request(saml_request)
 
         # If this is initial request, show login form
-        if request.method == 'GET' or not request.form.get('device_id'):
+        if request.method == 'GET' or not request.form.get('is_managed'):
             return render_template_string(
                 LOGIN_TEMPLATE,
                 saml_request=saml_request,
@@ -314,18 +636,26 @@ def sso():
                 error=None
             )
 
-        # Process authentication with device posture
-        device_id = request.form.get('device_id')
-        vendor = request.form.get('vendor')
-        model = request.form.get('model')
-        os = request.form.get('os')
-        os_version = request.form.get('os_version')
+        # Process authentication with device posture - simplified to boolean values
+        is_managed = request.form.get('is_managed', 'false').lower() == 'true'
+        is_compliant = request.form.get('is_compliant', 'false').lower() == 'true'
         user_id = request_data.get('subject') or 'user@example.com'
 
-        # Check device posture
-        device_posture = device_checker.check_device_posture(
-            device_id, vendor, model, os, os_version, user_id
+        # Create simplified device posture object
+        from device_checker import DevicePosture
+        device_posture = DevicePosture(
+            device_id='user-device',
+            vendor='Unknown',
+            model='Unknown',
+            os='Unknown',
+            os_version='1.0',
+            user_id=user_id
         )
+
+        # Set the boolean values directly
+        device_posture.is_managed = is_managed
+        device_posture.is_compliant = is_compliant
+        device_posture.is_encrypted = is_managed  # Assume encrypted if managed
 
         # Validate posture against requirements
         is_valid, error_message = device_checker.validate_posture(device_posture)
