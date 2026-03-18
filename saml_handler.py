@@ -67,6 +67,16 @@ class SAMLHandler:
             # Decode base64
             decoded = base64.b64decode(saml_request)
 
+            # Log the full SAML Request XML
+            logger.info("=" * 80)
+            logger.info("SAML REQUEST XML:")
+            logger.info("=" * 80)
+            try:
+                logger.info(decoded.decode('utf-8'))
+            except:
+                logger.info(decoded)
+            logger.info("=" * 80)
+
             # Parse XML securely using defusedxml
             root = defused_lxml.fromstring(decoded)
 
@@ -277,6 +287,20 @@ class SAMLHandler:
         # Convert to string and base64 encode
         response_str = etree.tostring(response, pretty_print=False, xml_declaration=True,
                                      encoding='UTF-8')
+
+        # Log the full SAML Response XML
+        logger.info("=" * 80)
+        logger.info("SAML RESPONSE XML:")
+        logger.info("=" * 80)
+        try:
+            # Pretty print for readability
+            pretty_response = etree.tostring(response, pretty_print=True, xml_declaration=True,
+                                           encoding='UTF-8')
+            logger.info(pretty_response.decode('utf-8'))
+        except:
+            logger.info(response_str)
+        logger.info("=" * 80)
+
         response_b64 = base64.b64encode(response_str).decode('utf-8')
 
         logger.info(

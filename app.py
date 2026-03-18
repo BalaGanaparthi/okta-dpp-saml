@@ -656,14 +656,14 @@ def sso():
                 error=None
             )
 
-        # Process authentication with device posture - simplified to boolean values
+        # Process authentication with device posture - accept user's selections directly
         is_managed = request.form.get('is_managed', 'false').lower() == 'true'
         is_compliant = request.form.get('is_compliant', 'false').lower() == 'true'
         user_id = request_data.get('subject') or 'user@example.com'
 
-        logger.info(f"Device posture submission: user={user_id}, managed={is_managed}, compliant={is_compliant}")
+        logger.info(f"✅ Device posture submission accepted: user={user_id}, managed={is_managed}, compliant={is_compliant}")
 
-        # Create simplified device posture object
+        # Create device posture object with user's selections
         from device_checker import DevicePosture
         device_posture = DevicePosture(
             device_id='user-device',
@@ -674,34 +674,12 @@ def sso():
             user_id=user_id
         )
 
-        # Set the boolean values directly
+        # Set the boolean values directly from user's selection (no validation)
         device_posture.is_managed = is_managed
         device_posture.is_compliant = is_compliant
         device_posture.is_encrypted = is_managed  # Assume encrypted if managed
 
-        # Validate posture against requirements
-        is_valid, error_message = device_checker.validate_posture(device_posture)
-
-        # Log device check result
-        log_device_check(logger, 'user-device', user_id, is_managed, is_compliant, is_valid)
-
-        if not is_valid:
-            logger.warning(f"Device posture validation failed: {error_message} for user {user_id}")
-            log_saml_event(logger, 'AuthnFailed', request_id=request_id, user=user_id, details=error_message)
-            duration_ms = (time.time() - start_time) * 1000
-            log_request(logger, request.method, '/saml/sso', 403, duration_ms)
-
-            # Show error on login form
-            return render_template_string(
-                LOGIN_TEMPLATE,
-                saml_request=saml_request,
-                relay_state=relay_state,
-                action='/saml/sso',
-                issuer=request_data.get('issuer', 'Unknown'),
-                subject=request_data.get('subject'),
-                device_posture_requested=request_data.get('device_posture_requested', False),
-                error=error_message
-            ), 403
+        logger.info(f"📋 Device posture set: Managed={is_managed}, Compliant={is_compliant}, Encrypted={is_managed}")
 
         # Create SAML response
         logger.info(f"Creating SAML response for user: {user_id}")
