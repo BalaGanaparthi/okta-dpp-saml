@@ -293,8 +293,9 @@ LOGIN_TEMPLATE = """
         }
 
         .submit-btn:disabled {
-            opacity: 0.5;
+            opacity: 0.6;
             cursor: not-allowed;
+            background: linear-gradient(135deg, #999 0%, #777 100%);
         }
 
         .submit-btn::before {
@@ -464,16 +465,16 @@ LOGIN_TEMPLATE = """
                 </div>
             </div>
 
-            <!-- Submit Section -->
-            <div class="submit-section" style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
-                <div id="selectionStatus" style="text-align: center; margin-bottom: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; color: #856404;">
+            <!-- Submit Section - ALWAYS VISIBLE -->
+            <div style="margin-top: 40px; padding-top: 25px; border-top: 3px solid #667eea;">
+                <div id="selectionStatus" style="text-align: center; margin-bottom: 20px; padding: 15px; background: #fff3cd; border-radius: 10px; color: #856404; font-weight: 600; font-size: 15px;">
                     ⚠️ Please select both options above to continue
                 </div>
-                <button type="submit" class="submit-btn" id="submitBtn" style="display: block !important; visibility: visible !important; width: 100%; padding: 18px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; opacity: 0.5;">
-                    <span>🚀 Submit Device Posture</span>
+                <button type="submit" class="submit-btn" id="submitBtn" disabled style="width: 100%; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-size: 20px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+                    <span style="font-size: 20px;">🚀 SUBMIT DEVICE POSTURE</span>
                 </button>
-                <p class="help-text" style="text-align: center; color: #a0aec0; font-size: 13px; margin-top: 15px;">
-                    Your selections will be included in the SAML response sent to the application
+                <p style="text-align: center; color: #666; font-size: 13px; margin-top: 15px; font-style: italic;">
+                    Select both options above, then click the button to continue
                 </p>
             </div>
         </form>
@@ -491,15 +492,20 @@ LOGIN_TEMPLATE = """
 
             if (selections.managed !== null && selections.compliant !== null) {
                 submitBtn.disabled = false;
+                submitBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
                 submitBtn.style.opacity = '1';
                 submitBtn.style.cursor = 'pointer';
+                submitBtn.style.transform = 'scale(1.02)';
                 statusDiv.innerHTML = '✅ Ready to submit: Managed=' + selections.managed + ', Compliant=' + selections.compliant;
                 statusDiv.style.background = '#d4edda';
                 statusDiv.style.color = '#155724';
+                statusDiv.style.fontWeight = '700';
             } else {
                 submitBtn.disabled = true;
-                submitBtn.style.opacity = '0.5';
+                submitBtn.style.background = 'linear-gradient(135deg, #999 0%, #777 100%)';
+                submitBtn.style.opacity = '0.6';
                 submitBtn.style.cursor = 'not-allowed';
+                submitBtn.style.transform = 'scale(1)';
                 let missing = [];
                 if (selections.managed === null) missing.push('Management Status');
                 if (selections.compliant === null) missing.push('Compliance Status');
