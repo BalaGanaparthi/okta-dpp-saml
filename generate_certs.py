@@ -18,6 +18,16 @@ def generate_self_signed_cert(output_dir='certs'):
     # Create output directory
     os.makedirs(output_dir, exist_ok=True)
 
+    # Check if certificates already exist
+    cert_path = os.path.join(output_dir, 'saml.crt')
+    key_path = os.path.join(output_dir, 'saml.key')
+
+    if os.path.exists(cert_path) and os.path.exists(key_path):
+        print("✓ Certificates already exist, skipping generation")
+        print(f"  Certificate: {cert_path}")
+        print(f"  Key: {key_path}")
+        return
+
     # Generate private key
     print("Generating RSA private key...")
     private_key = rsa.generate_private_key(
@@ -56,8 +66,7 @@ def generate_self_signed_cert(output_dir='certs'):
         critical=False,
     ).sign(private_key, hashes.SHA256(), default_backend())
 
-    # Write private key to file
-    key_path = os.path.join(output_dir, 'saml.key')
+    # Write private key to file (variables already defined above)
     with open(key_path, 'wb') as f:
         f.write(private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
@@ -66,8 +75,7 @@ def generate_self_signed_cert(output_dir='certs'):
         ))
     print(f"✓ Private key saved to: {key_path}")
 
-    # Write certificate to file
-    cert_path = os.path.join(output_dir, 'saml.crt')
+    # Write certificate to file (path already defined above)
     with open(cert_path, 'wb') as f:
         f.write(cert.public_bytes(serialization.Encoding.PEM))
     print(f"✓ Certificate saved to: {cert_path}")
