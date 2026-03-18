@@ -465,16 +465,30 @@ LOGIN_TEMPLATE = """
                 </div>
             </div>
 
-            <!-- Submit Section - ALWAYS VISIBLE -->
-            <div style="margin-top: 40px; padding-top: 25px; border-top: 3px solid #667eea;">
-                <div id="selectionStatus" style="text-align: center; margin-bottom: 20px; padding: 15px; background: #fff3cd; border-radius: 10px; color: #856404; font-weight: 600; font-size: 15px;">
-                    ⚠️ Please select both options above to continue
+            <!-- SUBMIT BUTTON SECTION -->
+            <div style="margin-top: 50px; padding: 30px; background: #f7fafc; border-radius: 15px; border: 3px solid #667eea;">
+                <div id="selectionStatus" style="text-align: center; margin-bottom: 25px; padding: 20px; background: #fff3cd; border-radius: 12px; color: #856404; font-weight: 700; font-size: 16px; border: 2px solid #ffc107;">
+                    ⚠️ SELECT BOTH OPTIONS ABOVE
                 </div>
-                <button type="submit" class="submit-btn" id="submitBtn" disabled style="width: 100%; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-size: 20px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
-                    <span style="font-size: 20px;">🚀 SUBMIT DEVICE POSTURE</span>
+
+                <button type="submit" class="submit-btn" id="submitBtn" disabled
+                    style="width: 100%;
+                           padding: 25px;
+                           background: #ffa726;
+                           color: white;
+                           border: 4px solid #f57c00;
+                           border-radius: 15px;
+                           font-size: 24px;
+                           font-weight: 900;
+                           cursor: pointer;
+                           text-transform: uppercase;
+                           letter-spacing: 1px;
+                           box-shadow: 0 8px 20px rgba(255, 167, 38, 0.5);">
+                    🚀 SUBMIT DEVICE POSTURE 🚀
                 </button>
-                <p style="text-align: center; color: #666; font-size: 13px; margin-top: 15px; font-style: italic;">
-                    Select both options above, then click the button to continue
+
+                <p style="text-align: center; color: #333; font-size: 14px; margin-top: 20px; font-weight: 600;">
+                    👆 Click button after making selections above 👆
                 </p>
             </div>
         </form>
@@ -492,26 +506,26 @@ LOGIN_TEMPLATE = """
 
             if (selections.managed !== null && selections.compliant !== null) {
                 submitBtn.disabled = false;
-                submitBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                submitBtn.style.opacity = '1';
+                submitBtn.style.background = '#4caf50';
+                submitBtn.style.borderColor = '#388e3c';
                 submitBtn.style.cursor = 'pointer';
-                submitBtn.style.transform = 'scale(1.02)';
-                statusDiv.innerHTML = '✅ Ready to submit: Managed=' + selections.managed + ', Compliant=' + selections.compliant;
-                statusDiv.style.background = '#d4edda';
-                statusDiv.style.color = '#155724';
-                statusDiv.style.fontWeight = '700';
+                submitBtn.style.transform = 'scale(1.05)';
+                submitBtn.style.boxShadow = '0 10px 30px rgba(76, 175, 80, 0.6)';
+                statusDiv.innerHTML = '✅ READY! Managed=' + selections.managed + ', Compliant=' + selections.compliant;
+                statusDiv.style.background = '#4caf50';
+                statusDiv.style.color = 'white';
+                statusDiv.style.borderColor = '#388e3c';
             } else {
                 submitBtn.disabled = true;
-                submitBtn.style.background = 'linear-gradient(135deg, #999 0%, #777 100%)';
-                submitBtn.style.opacity = '0.6';
+                submitBtn.style.background = '#ffa726';
+                submitBtn.style.borderColor = '#f57c00';
                 submitBtn.style.cursor = 'not-allowed';
                 submitBtn.style.transform = 'scale(1)';
+                submitBtn.style.boxShadow = '0 8px 20px rgba(255, 167, 38, 0.5)';
                 let missing = [];
-                if (selections.managed === null) missing.push('Management Status');
-                if (selections.compliant === null) missing.push('Compliance Status');
-                statusDiv.innerHTML = '⚠️ Please select: ' + missing.join(' and ');
-                statusDiv.style.background = '#fff3cd';
-                statusDiv.style.color = '#856404';
+                if (selections.managed === null) missing.push('Managed');
+                if (selections.compliant === null) missing.push('Compliant');
+                statusDiv.innerHTML = '⚠️ SELECT BOTH: ' + missing.join(' and ').toUpperCase();
             }
         }
 
