@@ -13,4 +13,4 @@ cmds = [
 ]
 
 [start]
-cmd = "python app.py"
+cmd = "gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
