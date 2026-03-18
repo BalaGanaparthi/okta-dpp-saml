@@ -7,10 +7,5 @@ cmds = [
     "pip install -r requirements.txt"
 ]
 
-[phases.build]
-cmds = [
-    "python generate_certs.py"
-]
-
 [start]
-cmd = "gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+cmd = "gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --log-level debug"
