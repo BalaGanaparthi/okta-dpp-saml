@@ -472,18 +472,23 @@ LOGIN_TEMPLATE = """
                 </div>
 
                 <button type="submit" class="submit-btn" id="submitBtn" disabled
-                    style="width: 100%;
-                           padding: 25px;
-                           background: #ffa726;
-                           color: white;
-                           border: 4px solid #f57c00;
-                           border-radius: 15px;
-                           font-size: 24px;
-                           font-weight: 900;
-                           cursor: pointer;
-                           text-transform: uppercase;
-                           letter-spacing: 1px;
-                           box-shadow: 0 8px 20px rgba(255, 167, 38, 0.5);">
+                    style="display: block !important;
+                           visibility: visible !important;
+                           width: 100% !important;
+                           padding: 25px !important;
+                           background: #ffa726 !important;
+                           color: white !important;
+                           border: 4px solid #f57c00 !important;
+                           border-radius: 15px !important;
+                           font-size: 24px !important;
+                           font-weight: 900 !important;
+                           cursor: pointer !important;
+                           text-transform: uppercase !important;
+                           letter-spacing: 1px !important;
+                           box-shadow: 0 8px 20px rgba(255, 167, 38, 0.5) !important;
+                           opacity: 1 !important;
+                           height: auto !important;
+                           min-height: 80px !important;">
                     🚀 SUBMIT DEVICE POSTURE 🚀
                 </button>
 
