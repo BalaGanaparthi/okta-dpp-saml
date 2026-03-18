@@ -46,6 +46,8 @@ class SAMLHandler:
             env_key = os.getenv('SAML_PRIVATE_KEY')
             if env_key:
                 logger.debug("Loading private key from SAML_PRIVATE_KEY environment variable")
+                # Handle escaped newlines in environment variable
+                env_key = env_key.replace('\\n', '\n')
                 self.key = env_key.encode('utf-8')
             else:
                 logger.debug(f"Loading private key from {self.key_file}")
