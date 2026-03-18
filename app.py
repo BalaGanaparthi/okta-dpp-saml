@@ -462,13 +462,18 @@ LOGIN_TEMPLATE = """
                 </div>
             </div>
 
-            <button type="submit" class="submit-btn" id="submitBtn" disabled>
-                <span>🚀 Continue to Application</span>
-            </button>
-
-            <p class="help-text">
-                Select your device management and compliance status to proceed with authentication
-            </p>
+            <!-- Submit Section -->
+            <div class="submit-section" style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+                <div id="selectionStatus" style="text-align: center; margin-bottom: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; color: #856404;">
+                    ⚠️ Please select both options above to continue
+                </div>
+                <button type="submit" class="submit-btn" id="submitBtn" style="display: block !important; visibility: visible !important; width: 100%; padding: 18px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; opacity: 0.5;">
+                    <span>🚀 Submit Device Posture</span>
+                </button>
+                <p class="help-text" style="text-align: center; color: #a0aec0; font-size: 13px; margin-top: 15px;">
+                    Your selections will be included in the SAML response sent to the application
+                </p>
+            </div>
         </form>
     </div>
 
@@ -477,6 +482,30 @@ LOGIN_TEMPLATE = """
             managed: null,
             compliant: null
         };
+
+        function updateSubmitButton() {
+            const submitBtn = document.getElementById('submitBtn');
+            const statusDiv = document.getElementById('selectionStatus');
+
+            if (selections.managed !== null && selections.compliant !== null) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+                statusDiv.innerHTML = '✅ Ready to submit: Managed=' + selections.managed + ', Compliant=' + selections.compliant;
+                statusDiv.style.background = '#d4edda';
+                statusDiv.style.color = '#155724';
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.5';
+                submitBtn.style.cursor = 'not-allowed';
+                let missing = [];
+                if (selections.managed === null) missing.push('Management Status');
+                if (selections.compliant === null) missing.push('Compliance Status');
+                statusDiv.innerHTML = '⚠️ Please select: ' + missing.join(' and ');
+                statusDiv.style.background = '#fff3cd';
+                statusDiv.style.color = '#856404';
+            }
+        }
 
         function selectOption(type, value) {
             selections[type] = value;
@@ -495,20 +524,19 @@ LOGIN_TEMPLATE = """
                 document.getElementById('isCompliantInput').value = value;
             }
 
-            // Enable submit button if both are selected
-            const submitBtn = document.getElementById('submitBtn');
-            if (selections.managed !== null && selections.compliant !== null) {
-                submitBtn.disabled = false;
-            }
+            updateSubmitButton();
         }
 
         // Prevent form submission if not all options selected
         document.getElementById('postureForm').addEventListener('submit', function(e) {
             if (selections.managed === null || selections.compliant === null) {
                 e.preventDefault();
-                alert('Please select both management and compliance status');
+                alert('Please select both Management Status and Compliance Status before submitting.');
             }
         });
+
+        // Initialize button state on page load
+        updateSubmitButton();
     </script>
 </body>
 </html>
