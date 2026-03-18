@@ -1,6 +1,8 @@
 """
 Okta Device Posture Provider (DPP)
 SAML 2.0 Identity Provider with Device Posture Extensions
+
+For Railway: Use gunicorn from Procfile, not Flask dev server
 """
 import sys
 import time
