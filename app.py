@@ -34,536 +34,164 @@ LOGIN_TEMPLATE = """
 <html>
 <head>
     <title>Device Posture Verification</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             padding: 20px;
-            position: relative;
-            overflow: hidden;
+            margin: 0;
         }
-
-        /* Animated background particles */
-        body::before {
-            content: '';
-            position: absolute;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: particle-animation 20s linear infinite;
-            z-index: 0;
-        }
-
-        @keyframes particle-animation {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(-50px, -50px); }
-        }
-
         .container {
-            background: rgba(255, 255, 255, 0.98);
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 100px rgba(102, 126, 234, 0.1);
-            padding: 50px 40px;
             max-width: 600px;
-            width: 100%;
-            position: relative;
-            z-index: 1;
-            backdrop-filter: blur(10px);
-            animation: slideUp 0.5s ease-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .logo {
-            font-size: 64px;
-            margin-bottom: 15px;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        h1 {
-            color: #2d3748;
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .subtitle {
-            color: #718096;
-            font-size: 16px;
-            font-weight: 400;
-        }
-
-        .info-badge {
-            background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 35px;
-            border: 2px solid rgba(102, 126, 234, 0.2);
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(102, 126, 234, 0.1);
-        }
-
-        .info-row:last-child {
-            border-bottom: none;
-        }
-
-        .info-label {
-            color: #4a5568;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .info-value {
-            color: #2d3748;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        .posture-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .posture-card {
+            margin: 50px auto;
             background: white;
-            border: 3px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 30px 20px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        h1 { color: #333; text-align: center; }
+        .user-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
             text-align: center;
-            position: relative;
-            overflow: hidden;
         }
-
-        .posture-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: 0;
+        .section { margin: 30px 0; }
+        .section h3 { color: #555; margin-bottom: 15px; }
+        .options { display: flex; gap: 15px; justify-content: center; }
+        .option {
+            flex: 1;
+            border: 3px solid #ddd;
+            padding: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
         }
-
-        .posture-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        }
-
-        .posture-card.selected {
+        .option:hover { border-color: #667eea; }
+        .option.selected {
             border-color: #667eea;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            transform: scale(1.05);
-            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
-        }
-
-        .posture-card.selected .icon {
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
         }
+        .option .icon { font-size: 40px; margin-bottom: 10px; }
 
-        .posture-card.selected .label,
-        .posture-card.selected .description {
-            color: white;
-        }
-
-        .posture-card > * {
-            position: relative;
-            z-index: 1;
-        }
-
-        .icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-            transition: transform 0.3s ease;
-        }
-
-        .posture-card:hover .icon {
-            transform: scale(1.1);
-        }
-
-        .posture-card.selected .icon {
-            transform: scale(1.15);
-            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
-        }
-
-        .label {
-            font-size: 18px;
-            font-weight: 700;
-            color: #2d3748;
-            margin-bottom: 8px;
-        }
-
-        .description {
-            font-size: 13px;
-            color: #718096;
-            line-height: 1.4;
-        }
-
-        .section-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: #4a5568;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-        }
-
-        .section-title::before {
-            content: '';
-            width: 4px;
-            height: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 2px;
-            margin-right: 10px;
-        }
-
-        .submit-btn {
+        #submitBtn {
             width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .submit-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
-        }
-
-        .submit-btn:active:not(:disabled) {
-            transform: translateY(0);
-        }
-
-        .submit-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            background: linear-gradient(135deg, #999 0%, #777 100%);
-        }
-
-        .submit-btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .submit-btn:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        .submit-btn span {
-            position: relative;
-            z-index: 1;
-        }
-
-        .error {
-            background: linear-gradient(135deg, #fee 0%, #fdd 100%);
-            border-left: 4px solid #e53e3e;
             padding: 20px;
-            margin-bottom: 25px;
-            border-radius: 12px;
-            color: #c53030;
-            animation: shake 0.5s;
-            box-shadow: 0 4px 15px rgba(229, 62, 62, 0.2);
+            font-size: 20px;
+            font-weight: bold;
+            background: #ff9800;
+            color: white;
+            border: 3px solid #f57c00;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 30px;
         }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
+        #submitBtn:disabled {
+            background: #ccc;
+            border-color: #999;
+            cursor: not-allowed;
         }
-
-        .error strong {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 16px;
-        }
-
-        .help-text {
+        #status {
             text-align: center;
-            color: #a0aec0;
-            font-size: 13px;
-            margin-top: 20px;
-            line-height: 1.6;
-        }
-
-        /* Responsive */
-        @media (max-width: 600px) {
-            .posture-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .container {
-                padding: 35px 25px;
-            }
-
-            h1 {
-                font-size: 26px;
-            }
-        }
-
-        /* Selection checkmark */
-        .checkmark {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            width: 30px;
-            height: 30px;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transform: scale(0);
-            transition: all 0.3s ease;
-        }
-
-        .posture-card.selected .checkmark {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .checkmark::after {
-            content: '✓';
-            color: #667eea;
-            font-size: 18px;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
             font-weight: bold;
         }
+        .warning {background: #fff3cd; color: #856404; }
+        .ready { background: #d4edda; color: #155724; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <div class="logo">🛡️</div>
-            <h1>Device Posture Verification</h1>
-            <p class="subtitle">Confirm your device security status</p>
+        <h1>🛡️ Device Posture Verification</h1>
+
+        <div class="user-info">
+            <strong>User:</strong> {{ subject or 'Not specified' }}
         </div>
 
-        {% if error %}
-        <div class="error">
-            <strong>⚠️ Verification Failed</strong>
-            {{ error }}
-        </div>
-        {% endif %}
-
-        <div class="info-badge">
-            <div class="info-row">
-                <span class="info-label">Organization</span>
-                <span class="info-value">{{ issuer.split('/')[-1][:20] if issuer else 'Unknown' }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">User</span>
-                <span class="info-value">{{ subject or 'Not specified' }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Verification</span>
-                <span class="info-value">{{ 'Required ✓' if device_posture_requested else 'Optional' }}</span>
-            </div>
-        </div>
-
-        <form method="POST" action="{{ action }}" id="postureForm">
+        <form method="POST" action="{{ action }}" id="form">
             <input type="hidden" name="SAMLRequest" value="{{ saml_request }}">
             <input type="hidden" name="RelayState" value="{{ relay_state }}">
-            <input type="hidden" name="is_managed" id="isManagedInput" value="">
-            <input type="hidden" name="is_compliant" id="isCompliantInput" value="">
+            <input type="hidden" name="is_managed" id="managedInput">
+            <input type="hidden" name="is_compliant" id="compliantInput">
 
-            <div class="section-title">Device Management Status</div>
-            <div class="posture-grid">
-                <div class="posture-card" onclick="selectOption('managed', true)" id="managedYes">
-                    <div class="checkmark"></div>
-                    <div class="icon">✅</div>
-                    <div class="label">Managed</div>
-                    <div class="description">Device is enrolled in MDM/UEM</div>
-                </div>
-                <div class="posture-card" onclick="selectOption('managed', false)" id="managedNo">
-                    <div class="checkmark"></div>
-                    <div class="icon">❌</div>
-                    <div class="label">Not Managed</div>
-                    <div class="description">Device is not managed</div>
+            <div class="section">
+                <h3>Is Device Managed?</h3>
+                <div class="options">
+                    <div class="option" id="managedYes" onclick="select('managed', true)">
+                        <div class="icon">✅</div>
+                        <div>YES</div>
+                    </div>
+                    <div class="option" id="managedNo" onclick="select('managed', false)">
+                        <div class="icon">❌</div>
+                        <div>NO</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="section-title">Compliance Status</div>
-            <div class="posture-grid">
-                <div class="posture-card" onclick="selectOption('compliant', true)" id="compliantYes">
-                    <div class="checkmark"></div>
-                    <div class="icon">🔒</div>
-                    <div class="label">Compliant</div>
-                    <div class="description">Meets security requirements</div>
-                </div>
-                <div class="posture-card" onclick="selectOption('compliant', false)" id="compliantNo">
-                    <div class="checkmark"></div>
-                    <div class="icon">🔓</div>
-                    <div class="label">Non-Compliant</div>
-                    <div class="description">Does not meet requirements</div>
+            <div class="section">
+                <h3>Is Device Compliant?</h3>
+                <div class="options">
+                    <div class="option" id="compliantYes" onclick="select('compliant', true)">
+                        <div class="icon">🔒</div>
+                        <div>YES</div>
+                    </div>
+                    <div class="option" id="compliantNo" onclick="select('compliant', false)">
+                        <div class="icon">🔓</div>
+                        <div>NO</div>
+                    </div>
                 </div>
             </div>
 
-            <!-- SUBMIT BUTTON SECTION -->
-            <div style="margin-top: 50px; padding: 30px; background: #f7fafc; border-radius: 15px; border: 3px solid #667eea;">
-                <div id="selectionStatus" style="text-align: center; margin-bottom: 25px; padding: 20px; background: #fff3cd; border-radius: 12px; color: #856404; font-weight: 700; font-size: 16px; border: 2px solid #ffc107;">
-                    ⚠️ SELECT BOTH OPTIONS ABOVE
-                </div>
-
-                <button type="submit" class="submit-btn" id="submitBtn" disabled
-                    style="display: block !important;
-                           visibility: visible !important;
-                           width: 100% !important;
-                           padding: 25px !important;
-                           background: #ffa726 !important;
-                           color: white !important;
-                           border: 4px solid #f57c00 !important;
-                           border-radius: 15px !important;
-                           font-size: 24px !important;
-                           font-weight: 900 !important;
-                           cursor: pointer !important;
-                           text-transform: uppercase !important;
-                           letter-spacing: 1px !important;
-                           box-shadow: 0 8px 20px rgba(255, 167, 38, 0.5) !important;
-                           opacity: 1 !important;
-                           height: auto !important;
-                           min-height: 80px !important;">
-                    🚀 SUBMIT DEVICE POSTURE 🚀
-                </button>
-
-                <p style="text-align: center; color: #333; font-size: 14px; margin-top: 20px; font-weight: 600;">
-                    👆 Click button after making selections above 👆
-                </p>
+            <div id="status" class="warning">
+                ⚠️ Please select both options
             </div>
+
+            <button type="submit" id="submitBtn" disabled>
+                🚀 SUBMIT DEVICE POSTURE
+            </button>
         </form>
     </div>
 
     <script>
-        let selections = {
-            managed: null,
-            compliant: null
-        };
+        let state = { managed: null, compliant: null };
 
-        function updateSubmitButton() {
-            const submitBtn = document.getElementById('submitBtn');
-            const statusDiv = document.getElementById('selectionStatus');
+        function select(type, value) {
+            state[type] = value;
 
-            if (selections.managed !== null && selections.compliant !== null) {
-                submitBtn.disabled = false;
-                submitBtn.style.background = '#4caf50';
-                submitBtn.style.borderColor = '#388e3c';
-                submitBtn.style.cursor = 'pointer';
-                submitBtn.style.transform = 'scale(1.05)';
-                submitBtn.style.boxShadow = '0 10px 30px rgba(76, 175, 80, 0.6)';
-                statusDiv.innerHTML = '✅ READY! Managed=' + selections.managed + ', Compliant=' + selections.compliant;
-                statusDiv.style.background = '#4caf50';
-                statusDiv.style.color = 'white';
-                statusDiv.style.borderColor = '#388e3c';
-            } else {
-                submitBtn.disabled = true;
-                submitBtn.style.background = '#ffa726';
-                submitBtn.style.borderColor = '#f57c00';
-                submitBtn.style.cursor = 'not-allowed';
-                submitBtn.style.transform = 'scale(1)';
-                submitBtn.style.boxShadow = '0 8px 20px rgba(255, 167, 38, 0.5)';
-                let missing = [];
-                if (selections.managed === null) missing.push('Managed');
-                if (selections.compliant === null) missing.push('Compliant');
-                statusDiv.innerHTML = '⚠️ SELECT BOTH: ' + missing.join(' and ').toUpperCase();
-            }
-        }
-
-        function selectOption(type, value) {
-            selections[type] = value;
-
-            // Update UI for managed
+            // Update UI
             if (type === 'managed') {
                 document.getElementById('managedYes').classList.toggle('selected', value === true);
                 document.getElementById('managedNo').classList.toggle('selected', value === false);
-                document.getElementById('isManagedInput').value = value;
-            }
-
-            // Update UI for compliant
-            if (type === 'compliant') {
+                document.getElementById('managedInput').value = value;
+            } else {
                 document.getElementById('compliantYes').classList.toggle('selected', value === true);
                 document.getElementById('compliantNo').classList.toggle('selected', value === false);
-                document.getElementById('isCompliantInput').value = value;
+                document.getElementById('compliantInput').value = value;
             }
 
-            updateSubmitButton();
+            // Update button
+            const btn = document.getElementById('submitBtn');
+            const status = document.getElementById('status');
+
+            if (state.managed !== null && state.compliant !== null) {
+                btn.disabled = false;
+                btn.style.background = '#4caf50';
+                btn.style.borderColor = '#388e3c';
+                status.className = 'ready';
+                status.innerHTML = '✅ Ready: Managed=' + state.managed + ', Compliant=' + state.compliant;
+            } else {
+                btn.disabled = true;
+                btn.style.background = '#ff9800';
+                btn.style.borderColor = '#f57c00';
+                status.className = 'warning';
+                status.innerHTML = '⚠️ Please select both options';
+            }
         }
-
-        // Prevent form submission if not all options selected
-        document.getElementById('postureForm').addEventListener('submit', function(e) {
-            if (selections.managed === null || selections.compliant === null) {
-                e.preventDefault();
-                alert('Please select both Management Status and Compliance Status before submitting.');
-            }
-        });
-
-        // Initialize button state on page load
-        updateSubmitButton();
     </script>
 </body>
 </html>

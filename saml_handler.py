@@ -5,7 +5,6 @@ import base64
 import uuid
 from datetime import datetime, timedelta
 from lxml import etree
-from defusedxml import lxml as defused_lxml
 from signxml import XMLSigner, XMLVerifier, methods
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
@@ -77,8 +76,9 @@ class SAMLHandler:
                 logger.info(decoded)
             logger.info("=" * 80)
 
-            # Parse XML securely using defusedxml
-            root = defused_lxml.fromstring(decoded)
+            # Parse XML securely
+            parser = etree.XMLParser(resolve_entities=False)
+            root = etree.fromstring(decoded, parser=parser)
 
             # Extract request details
             request_data = {
