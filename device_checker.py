@@ -2,11 +2,11 @@
 Device Posture Checker
 Validates device compliance and management status
 """
-import logging
 from typing import Dict, List, Optional
 from datetime import datetime
+from logger_config import get_logger, log_device_check, log_error
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class DevicePosture:
@@ -53,7 +53,11 @@ class DeviceChecker:
     def register_device(self, device_id: str, device_info: Dict):
         """Register a device in the system"""
         self.device_registry[device_id] = device_info
-        logger.info(f"Registered device: {device_id}")
+        logger.info(
+            f"📱 Device registered - ID: {device_id}, "
+            f"Managed: {device_info.get('managed', False)}, "
+            f"Encrypted: {device_info.get('encrypted', False)}"
+        )
 
     def check_device_posture(self, device_id: str, vendor: str, model: str,
                             os: str, os_version: str, user_id: str) -> DevicePosture:
@@ -71,25 +75,33 @@ class DeviceChecker:
         Returns:
             DevicePosture object with compliance information
         """
+        logger.info(f"🔍 Checking device posture - ID: {device_id}, User: {user_id}, OS: {os} {os_version}")
+
         posture = DevicePosture(device_id, vendor, model, os, os_version, user_id)
         posture.last_check = datetime.utcnow()
 
         # Check if device is registered (managed)
         posture.is_managed = self._check_managed(device_id)
+        logger.debug(f"  ├─ Management check: {'✓ Managed' if posture.is_managed else '✗ Not Managed'}")
 
         # Check OS compliance
         posture.is_compliant = self._check_os_compliance(os, os_version)
+        logger.debug(f"  ├─ Compliance check: {'✓ Compliant' if posture.is_compliant else '✗ Non-Compliant'}")
 
         # Check encryption status (simulated)
         posture.is_encrypted = self._check_encryption(device_id)
+        logger.debug(f"  ├─ Encryption check: {'✓ Encrypted' if posture.is_encrypted else '✗ Not Encrypted'}")
 
         # Additional checks
         posture.additional_facts = self._additional_checks(device_id, os)
+        logger.debug(f"  └─ Additional facts: {len(posture.additional_facts)} checks performed")
 
-        logger.info(f"Device check completed for {device_id}: "
-                   f"Managed={posture.is_managed}, "
-                   f"Compliant={posture.is_compliant}, "
-                   f"Encrypted={posture.is_encrypted}")
+        logger.info(
+            f"✅ Device check completed - {device_id}: "
+            f"Managed={posture.is_managed}, "
+            f"Compliant={posture.is_compliant}, "
+            f"Encrypted={posture.is_encrypted}"
+        )
 
         return posture
 
@@ -191,13 +203,22 @@ class DeviceChecker:
         require_compliant = self.config.get('device_checks.require_compliant', False)
         require_encrypted = self.config.get('device_checks.require_encrypted', False)
 
+        logger.debug(
+            f"Validating posture - Requirements: "
+            f"Managed={require_managed}, Compliant={require_compliant}, Encrypted={require_encrypted}"
+        )
+
         if require_managed and not posture.is_managed:
+            logger.warning(f"❌ Validation failed: Device {posture.device_id} is not managed (required)")
             return False, "DEVICE_NOT_MANAGED"
 
         if require_compliant and not posture.is_compliant:
+            logger.warning(f"❌ Validation failed: Device {posture.device_id} is not compliant (required)")
             return False, "DEVICE_NOT_COMPLIANT"
 
         if require_encrypted and not posture.is_encrypted:
+            logger.warning(f"❌ Validation failed: Device {posture.device_id} is not encrypted (required)")
             return False, "DEVICE_NOT_ENCRYPTED"
 
+        logger.info(f"✅ Validation passed for device {posture.device_id}")
         return True, None

@@ -2,19 +2,17 @@
 Okta Device Posture Provider (DPP)
 SAML 2.0 Identity Provider with Device Posture Extensions
 """
-import logging
 import sys
+import time
 from flask import Flask, request, render_template_string, redirect, make_response
 from config import Config
 from saml_handler import SAMLHandler
 from device_checker import DeviceChecker
+from logger_config import setup_logging, get_logger, log_request, log_saml_event, log_device_check, log_error
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# Initialize logging
+setup_logging('okta-dpp')
+logger = get_logger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -612,19 +610,41 @@ def index():
 @app.route('/saml/sso', methods=['GET', 'POST'])
 def sso():
     """SAML SSO endpoint - handles AuthnRequest"""
+    start_time = time.time()
+    request_id = None
+    user_id = None
+    issuer = None
+
     try:
         # Get SAMLRequest
         saml_request = request.form.get('SAMLRequest') or request.args.get('SAMLRequest')
         relay_state = request.form.get('RelayState') or request.args.get('RelayState', '')
 
+        logger.info(f"SAML SSO request received: method={request.method}, has_relay_state={bool(relay_state)}")
+
         if not saml_request:
+            logger.warning("Missing SAMLRequest parameter")
             return "Missing SAMLRequest parameter", 400
 
         # Parse SAML request
         request_data = saml_handler.parse_authn_request(saml_request)
+        request_id = request_data.get('id')
+        user_id = request_data.get('subject')
+        issuer = request_data.get('issuer')
+
+        log_saml_event(
+            logger, 'AuthnRequest received',
+            request_id=request_id,
+            user=user_id,
+            issuer=issuer,
+            details=f"Device posture: {request_data.get('device_posture_requested', False)}"
+        )
 
         # If this is initial request, show login form
         if request.method == 'GET' or not request.form.get('is_managed'):
+            logger.info(f"Showing login form for user: {user_id or 'unknown'}")
+            duration_ms = (time.time() - start_time) * 1000
+            log_request(logger, request.method, '/saml/sso', 200, duration_ms)
             return render_template_string(
                 LOGIN_TEMPLATE,
                 saml_request=saml_request,
@@ -640,6 +660,8 @@ def sso():
         is_managed = request.form.get('is_managed', 'false').lower() == 'true'
         is_compliant = request.form.get('is_compliant', 'false').lower() == 'true'
         user_id = request_data.get('subject') or 'user@example.com'
+
+        logger.info(f"Device posture submission: user={user_id}, managed={is_managed}, compliant={is_compliant}")
 
         # Create simplified device posture object
         from device_checker import DevicePosture
@@ -660,7 +682,15 @@ def sso():
         # Validate posture against requirements
         is_valid, error_message = device_checker.validate_posture(device_posture)
 
+        # Log device check result
+        log_device_check(logger, 'user-device', user_id, is_managed, is_compliant, is_valid)
+
         if not is_valid:
+            logger.warning(f"Device posture validation failed: {error_message} for user {user_id}")
+            log_saml_event(logger, 'AuthnFailed', request_id=request_id, user=user_id, details=error_message)
+            duration_ms = (time.time() - start_time) * 1000
+            log_request(logger, request.method, '/saml/sso', 403, duration_ms)
+
             # Show error on login form
             return render_template_string(
                 LOGIN_TEMPLATE,
@@ -674,9 +704,22 @@ def sso():
             ), 403
 
         # Create SAML response
+        logger.info(f"Creating SAML response for user: {user_id}")
         saml_response = saml_handler.create_authn_response(
             request_data, device_posture, is_success=True
         )
+
+        log_saml_event(
+            logger, 'AuthnResponse created',
+            request_id=request_id,
+            user=user_id,
+            issuer=issuer,
+            details='SUCCESS'
+        )
+
+        duration_ms = (time.time() - start_time) * 1000
+        log_request(logger, request.method, '/saml/sso', 200, duration_ms)
+        logger.info(f"SAML authentication successful for {user_id} in {duration_ms:.2f}ms")
 
         # Return SAML response via POST form
         return render_template_string(
@@ -687,26 +730,38 @@ def sso():
         )
 
     except Exception as e:
-        logger.error(f"SSO error: {e}", exc_info=True)
+        duration_ms = (time.time() - start_time) * 1000
+        log_error(logger, e, f"SSO endpoint error for user={user_id}, issuer={issuer}")
+        log_request(logger, request.method, '/saml/sso', 500, duration_ms)
         return f"Authentication failed: {str(e)}", 500
 
 
 @app.route('/saml/metadata')
 def metadata():
     """SAML metadata endpoint"""
+    start_time = time.time()
     try:
+        logger.debug("Generating SAML metadata")
         metadata_xml = saml_handler.get_metadata()
         response = make_response(metadata_xml)
         response.headers['Content-Type'] = 'application/xml'
+
+        duration_ms = (time.time() - start_time) * 1000
+        log_request(logger, 'GET', '/saml/metadata', 200, duration_ms)
+        logger.info(f"SAML metadata served successfully")
         return response
     except Exception as e:
-        logger.error(f"Metadata error: {e}")
+        duration_ms = (time.time() - start_time) * 1000
+        log_error(logger, e, "Metadata generation failed")
+        log_request(logger, 'GET', '/saml/metadata', 500, duration_ms)
         return f"Failed to generate metadata: {str(e)}", 500
 
 
 @app.route('/admin/devices', methods=['GET', 'POST'])
 def admin_devices():
     """Device registration admin interface"""
+    start_time = time.time()
+
     if request.method == 'POST':
         device_id = request.form.get('device_id')
         device_info = {
@@ -714,10 +769,15 @@ def admin_devices():
             'encrypted': request.form.get('encrypted') == 'true',
             'last_sync': request.form.get('last_sync', '')
         }
+        logger.info(f"Registering device: {device_id}, managed={device_info['managed']}, encrypted={device_info['encrypted']}")
         device_checker.register_device(device_id, device_info)
         message = f"Device {device_id} registered successfully"
+        duration_ms = (time.time() - start_time) * 1000
+        log_request(logger, 'POST', '/admin/devices', 200, duration_ms)
     else:
         message = None
+        duration_ms = (time.time() - start_time) * 1000
+        log_request(logger, 'GET', '/admin/devices', 200, duration_ms)
 
     # List registered devices
     devices_html = ""
@@ -786,26 +846,72 @@ def admin_devices():
 @app.route('/health')
 def health():
     """Health check endpoint"""
-    return {
+    start_time = time.time()
+    health_status = {
         'status': 'healthy',
         'service': 'Okta Device Posture Provider',
         'version': '1.0.0',
         'saml_ready': saml_handler.cert is not None
     }
 
+    duration_ms = (time.time() - start_time) * 1000
+    logger.debug(f"Health check: {health_status}")
+    log_request(logger, 'GET', '/health', 200, duration_ms)
+
+    return health_status
+
+
+# Request logging middleware
+@app.before_request
+def before_request():
+    """Log request details before processing"""
+    request.start_time = time.time()
+    if request.path != '/health':  # Don't log health checks
+        logger.debug(f"Incoming request: {request.method} {request.path} from {request.remote_addr}")
+
+
+@app.after_request
+def after_request(response):
+    """Log response details after processing"""
+    if hasattr(request, 'start_time') and request.path != '/health':
+        duration_ms = (time.time() - request.start_time) * 1000
+        logger.debug(f"Request completed: {request.method} {request.path} - {response.status_code} ({duration_ms:.2f}ms)")
+    return response
+
 
 if __name__ == '__main__':
-    logger.info("Starting Okta Device Posture Provider...")
+    logger.info("=" * 70)
+    logger.info("Starting Okta Device Posture Provider")
+    logger.info("=" * 70)
+    logger.info(f"Version: 1.0.0")
     logger.info(f"Entity ID: {config.get('saml.entity_id')}")
     logger.info(f"SSO URL: {config.get('saml.sso_url')}")
+    logger.info(f"Host: {config.get('server.host', '0.0.0.0')}")
+    logger.info(f"Port: {config.get('server.port', 8443)}")
+    logger.info(f"Debug Mode: {config.get('server.debug', True)}")
 
     # Check for certificates
-    if not saml_handler.cert or not saml_handler.key:
+    if saml_handler.cert and saml_handler.key:
+        logger.info("✅ SAML certificates loaded successfully")
+    else:
         logger.warning("⚠️  SAML certificates not found. SAML responses will NOT be signed.")
         logger.warning("    Generate certificates using: python generate_certs.py")
 
-    app.run(
-        host=config.get('server.host', '0.0.0.0'),
-        port=config.get('server.port', 8443),
-        debug=config.get('server.debug', True)
-    )
+    # Device check configuration
+    logger.info(f"Device checks - Require Managed: {config.get('device_checks.require_managed')}")
+    logger.info(f"Device checks - Require Compliant: {config.get('device_checks.require_compliant')}")
+    logger.info(f"Device checks - Require Encrypted: {config.get('device_checks.require_encrypted')}")
+
+    logger.info("=" * 70)
+    logger.info("Server starting...")
+    logger.info("=" * 70)
+
+    try:
+        app.run(
+            host=config.get('server.host', '0.0.0.0'),
+            port=config.get('server.port', 8443),
+            debug=config.get('server.debug', True)
+        )
+    except Exception as e:
+        log_error(logger, e, "Failed to start application")
+        sys.exit(1)

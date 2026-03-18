@@ -1,7 +1,6 @@
 """
 SAML 2.0 Handler with Okta Device Posture Extensions
 """
-import logging
 import base64
 import uuid
 from datetime import datetime, timedelta
@@ -11,8 +10,9 @@ from signxml import XMLSigner, XMLVerifier, methods
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 from typing import Optional, Dict, Tuple
+from logger_config import get_logger, log_saml_event, log_error
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class SAMLHandler:
@@ -37,13 +37,19 @@ class SAMLHandler:
     def _load_certificates(self):
         """Load SAML signing certificate and key"""
         try:
+            logger.debug(f"Loading certificates from {self.cert_file} and {self.key_file}")
             with open(self.cert_file, 'rb') as f:
                 self.cert = f.read()
             with open(self.key_file, 'rb') as f:
                 self.key = f.read()
-            logger.info("SAML certificates loaded successfully")
+            logger.info(f"✅ SAML certificates loaded successfully (cert: {len(self.cert)} bytes, key: {len(self.key)} bytes)")
         except FileNotFoundError as e:
-            logger.warning(f"Certificate files not found: {e}")
+            logger.warning(f"⚠️  Certificate files not found: {e}")
+            logger.warning("SAML responses will NOT be signed!")
+            self.cert = None
+            self.key = None
+        except Exception as e:
+            log_error(logger, e, "Failed to load SAML certificates")
             self.cert = None
             self.key = None
 
@@ -91,17 +97,20 @@ class SAMLHandler:
             for ctx in authn_context:
                 if ctx.text == self.config.get('okta.namespace'):
                     request_data['device_posture_requested'] = True
-                    logger.info("Device Posture authentication requested")
+                    logger.info("✓ Device Posture authentication requested")
                     break
 
-            logger.info(f"Parsed AuthnRequest: ID={request_data['id']}, "
-                       f"Issuer={request_data['issuer']}, "
-                       f"Subject={request_data['subject']}")
+            logger.info(
+                f"📥 Parsed AuthnRequest - ID: {request_data['id'][:16]}..., "
+                f"Issuer: {request_data['issuer'].split('/')[-1] if request_data['issuer'] and '/' in request_data['issuer'] else request_data['issuer']}, "
+                f"Subject: {request_data['subject']}, "
+                f"Device Posture: {request_data['device_posture_requested']}"
+            )
 
             return request_data
 
         except Exception as e:
-            logger.error(f"Failed to parse AuthnRequest: {e}")
+            log_error(logger, e, "Failed to parse AuthnRequest")
             raise
 
     def create_authn_response(self, request_data: Dict, device_posture,
@@ -260,20 +269,37 @@ class SAMLHandler:
 
         # Sign the response if certificates are available
         if self.cert and self.key:
+            logger.debug("Signing SAML response with X.509 certificate")
             response = self._sign_xml(response)
+        else:
+            logger.warning("⚠️  SAML response NOT signed (certificates not available)")
 
         # Convert to string and base64 encode
         response_str = etree.tostring(response, pretty_print=False, xml_declaration=True,
                                      encoding='UTF-8')
         response_b64 = base64.b64encode(response_str).decode('utf-8')
 
-        logger.info(f"Created SAML Response: ID={response_id}, Status={status_code}")
+        logger.info(
+            f"📤 Created SAML Response - ID: {response_id[:16]}..., "
+            f"Status: {status_code.split(':')[-1]}, "
+            f"User: {device_posture.user_id if is_success else 'N/A'}, "
+            f"Signed: {'Yes' if self.cert and self.key else 'No'}, "
+            f"Size: {len(response_b64)} bytes"
+        )
+
+        if is_success:
+            logger.info(
+                f"Device Posture Facts - IsManaged: {device_posture.is_managed}, "
+                f"IsCompliant: {device_posture.is_compliant}, "
+                f"IsEncrypted: {device_posture.is_encrypted}"
+            )
 
         return response_b64
 
     def _sign_xml(self, xml_element):
         """Sign XML element using XMLSigner"""
         try:
+            logger.debug("Signing XML with RSA-SHA256")
             signer = XMLSigner(
                 method=methods.enveloped,
                 signature_algorithm='rsa-sha256',
@@ -281,9 +307,10 @@ class SAMLHandler:
             )
 
             signed = signer.sign(xml_element, key=self.key, cert=self.cert)
+            logger.debug("✓ XML signature created successfully")
             return signed
         except Exception as e:
-            logger.warning(f"Failed to sign XML: {e}")
+            log_error(logger, e, "XML signing failed")
             return xml_element
 
     def get_metadata(self) -> str:
