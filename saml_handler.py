@@ -74,7 +74,10 @@ class SAMLHandler:
             Dictionary with parsed request data
         """
         try:
-            # Decode base64
+            # Decode base64 with padding fix
+            padding_needed = 4 - (len(saml_request) % 4)
+            if padding_needed != 4:
+                saml_request += '=' * padding_needed
             decoded = base64.b64decode(saml_request)
 
             # Log the full SAML Request XML

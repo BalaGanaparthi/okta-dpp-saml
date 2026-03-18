@@ -11,6 +11,7 @@ from config import Config
 from saml_handler import SAMLHandler
 from device_checker import DeviceChecker
 from logger_config import setup_logging, get_logger, log_request, log_saml_event, log_device_check, log_error
+from simple_saml import create_saml_response_simple
 
 # Initialize logging
 setup_logging('okta-dpp')
@@ -364,11 +365,29 @@ def sso():
 
         logger.info(f"📋 Device posture set: Managed={is_managed}, Compliant={is_compliant}, Encrypted={is_managed}")
 
-        # Create SAML response
+        # Create SAML response using simple template
         logger.info(f"Creating SAML response for user: {user_id}")
-        saml_response = saml_handler.create_authn_response(
-            request_data, device_posture, is_success=True
+        entity_id = config.get('saml.entity_id')
+        saml_response_b64, saml_response_xml = create_saml_response_simple(
+            entity_id=entity_id,
+            acs_url=request_data['acs_url'],
+            request_id=request_data['id'],
+            audience=request_data['issuer'],
+            user_email=user_id,
+            is_managed=is_managed,
+            is_compliant=is_compliant,
+            cert=saml_handler.cert,
+            key=saml_handler.key
         )
+
+        # Log the SAML Response XML
+        logger.info("=" * 70)
+        logger.info("SAML RESPONSE XML:")
+        logger.info("=" * 70)
+        logger.info(saml_response_xml)
+        logger.info("=" * 70)
+
+        saml_response = saml_response_b64
 
         log_saml_event(
             logger, 'AuthnResponse created',
