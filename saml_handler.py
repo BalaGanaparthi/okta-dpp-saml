@@ -36,11 +36,22 @@ class SAMLHandler:
     def _load_certificates(self):
         """Load SAML signing certificate and key"""
         try:
-            logger.debug(f"Loading certificates from {self.cert_file} and {self.key_file}")
+            # Load certificate from file
+            logger.debug(f"Loading certificate from {self.cert_file}")
             with open(self.cert_file, 'rb') as f:
                 self.cert = f.read()
-            with open(self.key_file, 'rb') as f:
-                self.key = f.read()
+
+            # Load private key from environment variable or file
+            import os
+            env_key = os.getenv('SAML_PRIVATE_KEY')
+            if env_key:
+                logger.debug("Loading private key from SAML_PRIVATE_KEY environment variable")
+                self.key = env_key.encode('utf-8')
+            else:
+                logger.debug(f"Loading private key from {self.key_file}")
+                with open(self.key_file, 'rb') as f:
+                    self.key = f.read()
+
             logger.info(f"✅ SAML certificates loaded successfully (cert: {len(self.cert)} bytes, key: {len(self.key)} bytes)")
         except FileNotFoundError as e:
             logger.warning(f"⚠️  Certificate files not found: {e}")
