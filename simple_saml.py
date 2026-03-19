@@ -97,15 +97,28 @@ def create_saml_response_simple(entity_id, acs_url, request_id, audience, user_e
     # Parse to sign
     response_elem = etree.fromstring(response_xml.encode('utf-8'))
 
-    # Sign the response
+    # Sign the ASSERTION (not the Response) for Okta compatibility
     if cert and key:
-        signer = XMLSigner(
-            method=methods.enveloped,
-            signature_algorithm='rsa-sha256',
-            digest_algorithm='sha256'
-        )
-        signed_response = signer.sign(response_elem, key=key, cert=cert)
-        response_xml = etree.tostring(signed_response, pretty_print=True, xml_declaration=True, encoding='UTF-8')
+        # Find the Assertion element
+        ns = {'saml': 'urn:oasis:names:tc:SAML:2.0:assertion'}
+        assertion_elem = response_elem.find('.//saml:Assertion', namespaces=ns)
+
+        if assertion_elem is not None:
+            # Sign the Assertion
+            signer = XMLSigner(
+                method=methods.enveloped,
+                signature_algorithm='rsa-sha256',
+                digest_algorithm='sha256'
+            )
+
+            # Sign and get the signed assertion
+            signed_assertion = signer.sign(assertion_elem, key=key, cert=cert)
+
+            # Replace the unsigned assertion with the signed one
+            parent = assertion_elem.getparent()
+            parent.replace(assertion_elem, signed_assertion)
+
+        response_xml = etree.tostring(response_elem, pretty_print=True, xml_declaration=True, encoding='UTF-8')
     else:
         response_xml = response_xml.encode('utf-8')
 
