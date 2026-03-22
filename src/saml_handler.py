@@ -342,7 +342,7 @@ class SAMLHandler:
         # Sign the response if certificates are available
         if self.cert and self.key:
             logger.debug("Signing SAML response with X.509 certificate")
-            response = self._sign_xml(response, response_id)
+            response = self._sign_xml(response)
         else:
             logger.warning("⚠️  SAML response NOT signed (certificates not available)")
 
@@ -382,7 +382,7 @@ class SAMLHandler:
 
         return response_b64
 
-    def _sign_xml_x(self, xml_element, response_id):
+    def _sign_xml_x(self, xml_element):
         """Sign XML element using XMLSigner"""
         try:
             logger.debug("Signing XML with RSA-SHA256")
@@ -392,7 +392,7 @@ class SAMLHandler:
                 digest_algorithm='sha256'
             )
 
-            signed = signer.sign(xml_element, key=self.key, cert=self.cert, response_id)
+            signed = signer.sign(xml_element, key=self.key, cert=self.cert)
             logger.debug("✓ XML signature created successfully")
             return signed
         except Exception as e:
@@ -400,10 +400,10 @@ class SAMLHandler:
             return xml_element
 
 
-    def _sign_xml(self, xml_element, response_id):
+    def _sign_xml(self, xml_element):
         """Sign XML element using XMLSigner"""
         try:
-            logger.debug("Signing XML with RSA-SHA256 \w response_id = " + response_id)
+            logger.debug("Signing XML with RSA-SHA256 \w response_id = ")
             signer = XMLSigner(
                 method=methods.enveloped,
                 signature_algorithm="rsa-sha256",
@@ -424,8 +424,6 @@ class SAMLHandler:
         except Exception as e:
             log_error(logger, e, "XML signing failed")
             return xml_element
-
-
             
 
     def get_metadata(self) -> str:
