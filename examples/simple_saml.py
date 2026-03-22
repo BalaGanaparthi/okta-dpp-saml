@@ -123,7 +123,14 @@ def create_saml_response_simple(entity_id, acs_url, request_id, audience, user_e
             )
 
             # Sign and get the signed assertion
-            signed_assertion = signer.sign(assertion_elem, key=key, cert=cert, reference_uri=f"#{assertion_id})
+            # signed_assertion = signer.sign(assertion_elem, key=key, cert=cert,reference_uri=f"#{assertion_id}")
+
+            signed_assertion = signer.sign(
+                assertion_elem,
+                key=key.encode('utf-8'),
+                cert=cert.encode('utf-8'),
+                reference_uri=f"#{assertion_id}"
+            )
 
             # Replace the unsigned assertion with the signed one
             parent = assertion_elem.getparent()
