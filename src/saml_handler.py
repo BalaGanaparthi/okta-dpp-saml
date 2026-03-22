@@ -399,7 +399,6 @@ class SAMLHandler:
             log_error(logger, e, "XML signing failed")
             return xml_element
 
-
     def _sign_xml(self, xml_element, assertion_id):
         """Sign XML element using XMLSigner"""
         try:
@@ -423,8 +422,7 @@ class SAMLHandler:
             return signed
         except Exception as e:
             log_error(logger, e, "XML signing failed")
-            return xml_element
-            
+            return xml_element  
 
     def get_metadata(self) -> str:
         """Generate SAML metadata XML for the IdP"""

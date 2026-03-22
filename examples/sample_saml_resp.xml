@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+    xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+    Destination="https://bala-guardianlife-poc.oktapreview.com/sso/saml2/0oawfjmsq71qRFLIN1d7"
+    ID="_2921283d92c54e9288143280c4ed3117" InResponseTo="id-793722565707025105101156964"
+    IssueInstant="2026-03-22T23:12:05.000Z" Version="2.0">
+    <saml:Issuer>https://okta-dpp-saml-production.up.railway.app</saml:Issuer>
+    <samlp:Status>
+        <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success" />
+    </samlp:Status>
+    <saml:Assertion ID="_41c8139e979d4e3f9c6a87f9eaa21403" IssueInstant="2026-03-22T23:12:05.000Z"
+        Version="2.0">
+        <saml:Issuer>https://okta-dpp-saml-production.up.railway.app</saml:Issuer>
+        <saml:Subject>
+            <saml:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress">
+                bala.ganaparthi@okta.com</saml:NameID>
+            <saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
+                <saml:SubjectConfirmationData InResponseTo="id-793722565707025105101156964"
+                    NotOnOrAfter="2026-03-23T00:12:05.000Z"
+                    Recipient="https://bala-guardianlife-poc.oktapreview.com/sso/saml2/0oawfjmsq71qRFLIN1d7" />
+            </saml:SubjectConfirmation>
+        </saml:Subject>
+        <saml:Conditions NotBefore="2026-03-22T23:12:05.000Z"
+            NotOnOrAfter="2026-03-23T00:12:05.000Z">
+            <saml:AudienceRestriction>
+                <saml:Audience>https://www.okta.com/saml2/service-provider/splsozflgjodzjmxdrar</saml:Audience>
+            </saml:AudienceRestriction>
+        </saml:Conditions>
+        <saml:AuthnStatement AuthnInstant="2026-03-22T23:12:05.000Z"
+            SessionIndex="_41c8139e979d4e3f9c6a87f9eaa21403">
+            <saml:AuthnContext>
+                <saml:AuthnContextClassRef>urn:okta:saml:2.0:DevicePosture</saml:AuthnContextClassRef>
+                <saml:AuthnContextDecl>
+                    <AuthenticationContextDeclaration xmlns="urn:okta:saml:2.0:DevicePosture">
+                        <Extension>
+                            <Device ID="TEST-946B506AB5A0" Vendor="TestDPP" Model="Simulator"
+                                OS="TestOS" OSVersion="1.0">
+                                <Posture>
+                                    <Fact Name="IsManaged" Value="true" />
+                                    <Fact Name="IsCompliant" Value="true" />
+                                </Posture>
+                            </Device>
+                        </Extension>
+                    </AuthenticationContextDeclaration>
+                </saml:AuthnContextDecl>
+            </saml:AuthnContext>
+        </saml:AuthnStatement>
+        <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+            <ds:SignedInfo>
+                <ds:CanonicalizationMethod Algorithm="http://www.w3.org/2006/12/xml-c14n11" />
+                <ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256" />
+                <ds:Reference URI="#_41c8139e979d4e3f9c6a87f9eaa21403">
+                    <ds:Transforms>
+                        <ds:Transform
+                            Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
+                        <ds:Transform Algorithm="http://www.w3.org/2006/12/xml-c14n11" />
+                    </ds:Transforms>
+                    <ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256" />
+                    <ds:DigestValue>k0qZoMdyVafz44bxGZKPa4iTMT0fFhojEzkLM9SiXa4=</ds:DigestValue>
+                </ds:Reference>
+            </ds:SignedInfo>
+            <ds:SignatureValue>
+                PrURV9Scc1ReipZKEkeG8d5rRO1YlpATpbqz84xsdwXO/yAel9EYdOIyZJ+/l67D2RvImaaukCIdc/h9iOX4zfly89hP4PVDUl4fwjt4EbTZfjwwqiJubZQaDP0/4EZHt100CqlNSSzMVCeE+kbwfDmaqfPqeScbYM2PK1ZeGSBZXOriqiI6/b3aej+4AzH451dN2nFj9FkLAVs5chhI5w7PN2a/sr1HUFoINNl90cgTdecfQStKj6MmD3cdEvBL//o5otFUMMzcFeDQiHvX+DQH1mjWvbLMJpm10xKaNW9mC7ZElHJkDecOxaUdTI9bDZXk5D74jmkPQfUH2DrqHw==</ds:SignatureValue>
+            <ds:KeyInfo>
+                <ds:X509Data>
+                    <ds:X509Certificate>MIIDUTCCAjmgAwIBAgIUckNRaSa6XEp/etIrsjdiHwnKUmIwDQYJKoZIhvcNAQEL
+                        BQAwMjEwMC4GA1UEAwwnb2t0YS1kcHAtc2FtbC1wcm9kdWN0aW9uLnVwLnJhaWx3
+                        YXkuYXBwMB4XDTI2MDMyMjA4MDQzOVoXDTI3MDMyMjA4MDQzOVowMjEwMC4GA1UE
+                        Awwnb2t0YS1kcHAtc2FtbC1wcm9kdWN0aW9uLnVwLnJhaWx3YXkuYXBwMIIBIjAN
+                        BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtiuXmyE8Jvq2W7qqvOpMehlPISlx
+                        TLVYUeqV/LAJyr8VM4Sqk+b6SqNuU00uCsRNiRAckm2R7D8wHf5nPHdC8Boglii7
+                        vNzJlAwGZoulXsmRXpetd5ADt2xuALKkvzBUcB7Hxc4lcTasIaQvej8+YAx8QG+Q
+                        Q6xPXD8JOtCkWnzcJMsbTVCMRo9YB756rh2uorKhVF28+TaIx522TsclCuY2W+Fn
+                        3AhFpNZmi7Fz29+juaP6p/kZZtHHvLavKhUJuA2KyiQbiT4aCWffSYl7DBgzIv2V
+                        hPZkhmZ6H3YaS2ziOIsLju50V3EfAVtnAScn/rc8FbV7xSAXAfrui5yYSQIDAQAB
+                        o18wXTA9BgNVHREENjA0gidva3RhLWRwcC1zYW1sLXByb2R1Y3Rpb24udXAucmFp
+                        bHdheS5hcHCCCWxvY2FsaG9zdDAMBgNVHRMBAf8EAjAAMA4GA1UdDwEB/wQEAwIF
+                        oDANBgkqhkiG9w0BAQsFAAOCAQEAlMPXN4vCtHfX7BarN1yovmcwtQNDJgn1sqP3
+                        wlIK7JthKGYhhlqRdZZs6IfwHLG+svP1/Avv+8fhxab8XNz2CEOTcUe0UbqABDZP
+                        JBN/mSVIPuOGxdSEaLS7Z+qAqE2G79lGSYeaS4QYm4CHINSOcBfD3iuPyHoof0CS
+                        W2xYmotcCSXQJDt73FrA+u4exnc5njtGwRgFup5PWaGeqHltUi516xJnY7W5xau6
+                        rnI5AQx1ujZjyh/vyUUzgQipAboxuftZptCR15iuHYfpqTj8YUj0YLyWV5bj7H20
+                        FIwb3EMnSbm7/ICuFa5sQEtUn6OWTav1N3usobBKFueKoKDNTw==
+</ds:X509Certificate>
+                </ds:X509Data>
+            </ds:KeyInfo>
+        </ds:Signature>
+    </saml:Assertion>
+</samlp:Response>

@@ -7,6 +7,9 @@ from datetime import datetime, timedelta
 from signxml import XMLSigner, methods
 from lxml import etree
 
+from src.logger_config import get_logger, log_saml_event, log_error
+
+logger = get_logger(__name__)
 
 SAML_RESPONSE_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
 <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
@@ -105,14 +108,22 @@ def create_saml_response_simple(entity_id, acs_url, request_id, audience, user_e
 
         if assertion_elem is not None:
             # Sign the Assertion
+            # signer = XMLSigner(
+            #     method=methods.enveloped,
+            #     signature_algorithm='rsa-sha256',
+            #     digest_algorithm='sha256'
+            # )
+
+            logger.info("Signing XML with RSA-SHA256 \w assertion_id = {assertion_id}" )
             signer = XMLSigner(
                 method=methods.enveloped,
-                signature_algorithm='rsa-sha256',
-                digest_algorithm='sha256'
+                signature_algorithm="rsa-sha256",
+                digest_algorithm="sha256",
+                c14n_algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"
             )
 
             # Sign and get the signed assertion
-            signed_assertion = signer.sign(assertion_elem, key=key, cert=cert)
+            signed_assertion = signer.sign(assertion_elem, key=key, cert=cert, assertion_id)
 
             # Replace the unsigned assertion with the signed one
             parent = assertion_elem.getparent()
