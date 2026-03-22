@@ -72,14 +72,8 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application files
+# Copy application files (includes pre-generated certs from certs/ folder)
 COPY . .
-
-# Create certs directory
-RUN mkdir -p certs
-
-# Generate self-signed certificates (for development)
-RUN python scripts/generate_certs.py
 
 # Expose port
 EXPOSE 8443

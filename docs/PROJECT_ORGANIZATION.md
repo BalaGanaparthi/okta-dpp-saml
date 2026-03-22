@@ -56,9 +56,9 @@ project004-okta-dpp/
 │   ├── SAML_SIGNING_DETAILED.md
 │   └── SOLUTION_APPLIED.md
 │
-├── certs/                       # Certificates (✅ REGENERATED)
-│   ├── saml.crt                # X509v3 certificate
-│   └── saml.key                # Private key
+├── certs/                       # Pre-generated certificates (✅ COMMITTED TO GIT)
+│   ├── saml.crt                # X509v3 certificate (committed)
+│   └── saml.key                # Private key (committed)
 │
 ├── logs/                        # Application logs
 │
