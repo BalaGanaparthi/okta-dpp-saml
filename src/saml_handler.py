@@ -92,15 +92,18 @@ class SAMLHandler:
         try:
             # Load certificate from file
             logger.debug(f"Loading certificate from {self.cert_file}")
-            with open(self.cert_file, 'rb') as f:
+            with open(self.cert_file, 'r') as f:
                 self.cert = f.read()
 
             # Load private key from file
             logger.debug(f"Loading private key from {self.key_file}")
-            with open(self.key_file, 'rb') as f:
+            with open(self.key_file, 'r') as f:
                 self.key = f.read()
 
             logger.info(f"✅ SAML certificates loaded successfully (cert: {len(self.cert)} bytes, key: {len(self.key)} bytes)")
+
+
+
         except FileNotFoundError as e:
             logger.warning(f"⚠️  Certificate files not found: {e}")
             logger.warning("SAML responses will NOT be signed!")
