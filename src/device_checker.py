@@ -4,7 +4,7 @@ Validates device compliance and management status
 """
 from typing import Dict, List, Optional
 from datetime import datetime
-from logger_config import get_logger, log_device_check, log_error
+from src.logger_config import get_logger, log_device_check, log_error
 
 logger = get_logger(__name__)
 

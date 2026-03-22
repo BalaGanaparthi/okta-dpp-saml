@@ -9,7 +9,7 @@ from signxml import XMLSigner, XMLVerifier, methods
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 from typing import Optional, Dict, Tuple
-from logger_config import get_logger, log_saml_event, log_error
+from src.logger_config import get_logger, log_saml_event, log_error
 
 logger = get_logger(__name__)
 
@@ -34,25 +34,17 @@ class SAMLHandler:
         self._load_certificates()
 
     def _load_certificates(self):
-        """Load SAML signing certificate and key"""
+        """Load SAML signing certificate and key from certs folder"""
         try:
             # Load certificate from file
             logger.debug(f"Loading certificate from {self.cert_file}")
             with open(self.cert_file, 'rb') as f:
                 self.cert = f.read()
 
-            # Load private key from environment variable or file
-            import os
-            env_key = os.getenv('SAML_PRIVATE_KEY')
-            if env_key:
-                logger.debug("Loading private key from SAML_PRIVATE_KEY environment variable")
-                # Handle escaped newlines in environment variable
-                env_key = env_key.replace('\\n', '\n')
-                self.key = env_key.encode('utf-8')
-            else:
-                logger.debug(f"Loading private key from {self.key_file}")
-                with open(self.key_file, 'rb') as f:
-                    self.key = f.read()
+            # Load private key from file
+            logger.debug(f"Loading private key from {self.key_file}")
+            with open(self.key_file, 'rb') as f:
+                self.key = f.read()
 
             logger.info(f"✅ SAML certificates loaded successfully (cert: {len(self.cert)} bytes, key: {len(self.key)} bytes)")
         except FileNotFoundError as e:

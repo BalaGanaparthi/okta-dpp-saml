@@ -60,7 +60,7 @@ pip install -r requirements.txt
 
 3. **Generate SAML certificates**
 ```bash
-python generate_certs.py
+python scripts/generate_certs.py
 ```
 This creates self-signed certificates in the `certs/` directory.
 
@@ -74,7 +74,7 @@ okta:
 
 5. **Run the service**
 ```bash
-python app.py
+python src/app.py
 ```
 
 The service will start on `http://0.0.0.0:8443`
@@ -227,7 +227,7 @@ For demo purposes, devices can be pre-registered:
 
 ### Custom Device Checks
 
-Add custom verification logic in `device_checker.py`:
+Add custom verification logic in `src/device_checker.py`:
 
 ```python
 def _additional_checks(self, device_id: str, os: str) -> Dict:

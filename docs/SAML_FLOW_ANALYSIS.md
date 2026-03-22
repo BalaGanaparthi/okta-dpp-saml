@@ -1,6 +1,7 @@
 # SAML Response Flow: Complete Analysis
 
 ## Overview
+
 This document provides a detailed analysis of how the SAML response is prepared and sent to Okta in the Device Posture Provider application.
 
 ---
@@ -184,15 +185,18 @@ def sso():
 ```
 
 **Receives:**
+
 - `SAMLRequest` (base64 encoded AuthnRequest from Okta)
 - `RelayState` (optional, for maintaining state)
 
 **Initial Request (First GET/POST):**
+
 1. Extracts `SAMLRequest` and `RelayState` from form/query parameters
 2. Calls `saml_handler.parse_authn_request(saml_request)` to decode and parse
 3. Returns HTML login form (`LOGIN_TEMPLATE`) to user
 
 **Form Submission (Second POST):**
+
 1. User submits form with device posture selections
 2. Extracts `is_managed` and `is_compliant` from form data
 3. Creates `DevicePosture` object
@@ -207,6 +211,7 @@ def sso():
 **Function:** `parse_authn_request(saml_request)`
 
 **Process:**
+
 ```python
 # Decode base64 with padding fix
 padding_needed = 4 - (len(saml_request) % 4)
@@ -231,6 +236,7 @@ request_data = {
 ```
 
 **Extracts:**
+
 - Request ID (used in `InResponseTo`)
 - ACS URL (Okta's assertion consumer service endpoint)
 - Issuer (Okta's entity ID)
@@ -245,6 +251,7 @@ request_data = {
 **Class:** `DevicePosture`
 
 **In app.py (lines 351-364):**
+
 ```python
 from device_checker import DevicePosture
 device_posture = DevicePosture(
@@ -263,6 +270,7 @@ device_posture.is_encrypted = is_managed    # assumed same as managed
 ```
 
 **Fields:**
+
 - `device_id`: Identifier for the device
 - `vendor`, `model`, `os`, `os_version`: Device metadata
 - `user_id`: User's email address
@@ -296,6 +304,7 @@ not_on_or_after = (now + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M:%S.000Z')
 The `SAML_RESPONSE_TEMPLATE` (lines 11-63) is a string template containing:
 
 **Response Element:**
+
 - `Destination`: Okta's ACS URL
 - `ID`: Unique response ID
 - `InResponseTo`: Original request ID from Okta
@@ -303,11 +312,13 @@ The `SAML_RESPONSE_TEMPLATE` (lines 11-63) is a string template containing:
 - `Version`: "2.0"
 
 **Issuer:**
+
 ```xml
 <saml:Issuer>https://okta-dpp-saml-production.up.railway.app</saml:Issuer>
 ```
 
 **Status:**
+
 ```xml
 <samlp:Status>
     <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
@@ -315,12 +326,14 @@ The `SAML_RESPONSE_TEMPLATE` (lines 11-63) is a string template containing:
 ```
 
 **Assertion:**
+
 - Contains user identity (NameID with email)
 - Subject confirmation data (bearer token)
 - Conditions (time validity + audience restriction)
 - Authentication statement with Device Posture extension
 
 **Device Posture Section:**
+
 ```xml
 <saml:AuthnStatement AuthnInstant="{issue_instant}" SessionIndex="{assertion_id}">
     <saml:AuthnContext>
@@ -403,6 +416,7 @@ def _load_certificates(self):
    - Adds the complete `<ds:Signature>` element as a child of `<samlp:Response>`
 
 **Signature Structure:**
+
 ```xml
 <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
     <ds:SignedInfo>
@@ -436,6 +450,7 @@ return response_b64, response_xml.decode('utf-8')
 ```
 
 Returns both:
+
 - Base64 encoded string (for sending to Okta)
 - Plain XML string (for logging)
 
@@ -456,27 +471,29 @@ return render_template_string(
 ```
 
 **HTML Template:**
+
 ```html
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>SAML Response</title>
-</head>
-<body onload="document.forms[0].submit()">
+  </head>
+  <body onload="document.forms[0].submit()">
     <form method="POST" action="{{ acs_url }}">
-        <input type="hidden" name="SAMLResponse" value="{{ saml_response }}">
-        {% if relay_state %}
-        <input type="hidden" name="RelayState" value="{{ relay_state }}">
-        {% endif %}
-        <noscript>
-            <button type="submit">Continue</button>
-        </noscript>
+      <input type="hidden" name="SAMLResponse" value="{{ saml_response }}" />
+      {% if relay_state %}
+      <input type="hidden" name="RelayState" value="{{ relay_state }}" />
+      {% endif %}
+      <noscript>
+        <button type="submit">Continue</button>
+      </noscript>
     </form>
-</body>
+  </body>
 </html>
 ```
 
 **What Happens:**
+
 1. Browser receives this HTML page
 2. `onload` handler automatically submits the form
 3. Browser POSTs to Okta's ACS URL with:
@@ -490,10 +507,12 @@ return render_template_string(
 When Okta receives the SAML response, it performs these checks:
 
 ### A. Decode and Parse
+
 - Base64 decode the `SAMLResponse` parameter
 - Parse the XML
 
 ### B. **Signature Validation ⚠️ WHERE YOUR ERROR OCCURS**
+
 1. Extract the `<ds:Signature>` element
 2. Extract the embedded certificate from `<ds:X509Certificate>`
 3. **Compare with configured IdP certificate in Okta**
@@ -505,32 +524,39 @@ When Okta receives the SAML response, it performs these checks:
    - Compare with `<ds:SignatureValue>`
 
 **ERROR CONDITION:**
+
 ```
 ErrorMessage: The digital signature in the SAML response did not
               validate with the Identity Provider's certificate
 ```
 
 This means:
+
 - The signature was created with private key A
 - But Okta has certificate B configured
 - Certificate B's public key cannot verify the signature
 
 ### C. Timestamp Validation
+
 - Check current time is between `NotBefore` and `NotOnOrAfter`
 - Reject if expired or not yet valid
 
 ### D. Audience Validation
+
 - Check `<saml:Audience>` matches Okta's entity ID
 
 ### E. InResponseTo Validation
+
 - Check `InResponseTo` matches the original request ID
 
 ### F. Device Posture Extraction
+
 - Parse `<AuthnContextDecl>` for device posture data
 - Extract `IsManaged` and `IsCompliant` facts
 - Apply Okta's device posture policy
 
 ### G. Success
+
 - User is authenticated
 - Device posture is recorded
 - User is logged into the application
@@ -544,6 +570,7 @@ Based on the analysis, your error occurs because:
 ### Issue: Key/Certificate Mismatch
 
 **The Problem:**
+
 1. Your code loads the private key from **environment variable first** (`SAML_PRIVATE_KEY`)
 2. If the env var exists, it uses that key to sign the response
 3. BUT the certificate file (`certs/saml.crt`) doesn't match that key
@@ -556,6 +583,7 @@ Based on the analysis, your error occurs because:
 ### Code Evidence:
 
 **saml_handler.py:46-55**
+
 ```python
 env_key = os.getenv('SAML_PRIVATE_KEY')
 if env_key:
@@ -571,11 +599,13 @@ else:
 ### Solution:
 
 **Option 1: Update Environment Variable (Recommended)**
+
 1. Go to Railway dashboard
 2. Update `SAML_PRIVATE_KEY` environment variable with content from `certs/saml.key`
 3. Redeploy
 
 **Option 2: Remove Environment Variable**
+
 1. Delete `SAML_PRIVATE_KEY` from Railway
 2. Ensure `certs/saml.key` file is deployed
 3. Redeploy
@@ -601,29 +631,32 @@ python3 test_signature.py
 
 ## Key Files Reference
 
-| File | Purpose |
-|------|---------|
-| `app.py:294-416` | Main SSO endpoint, orchestrates the flow |
-| `simple_saml.py:66-113` | Creates and signs SAML response |
-| `saml_handler.py:36-66` | Loads certificates and keys |
-| `saml_handler.py:68-140` | Parses incoming SAML requests |
-| `device_checker.py:12-43` | DevicePosture data structure |
-| `config.py` | Configuration management |
+| File                      | Purpose                                  |
+| ------------------------- | ---------------------------------------- |
+| `app.py:294-416`          | Main SSO endpoint, orchestrates the flow |
+| `simple_saml.py:66-113`   | Creates and signs SAML response          |
+| `saml_handler.py:36-66`   | Loads certificates and keys              |
+| `saml_handler.py:68-140`  | Parses incoming SAML requests            |
+| `device_checker.py:12-43` | DevicePosture data structure             |
+| `config.py`               | Configuration management                 |
 
 ---
 
 ## Configuration Files
 
 ### Required Certificate Files:
+
 - `certs/saml.crt` - X.509 certificate (public key)
 - `certs/saml.key` - RSA private key
 
 ### Environment Variables:
+
 - `SAML_PRIVATE_KEY` (optional) - Private key content
 - `SAML_ENTITY_ID` - Your IdP entity identifier
 - `SAML_SSO_URL` - Your SSO endpoint URL
 
 ### Certificate Fingerprint:
+
 ```
 SHA256: F6:CE:B6:41:88:0C:C0:B9:ED:04:C0:48:26:5F:B7:5D:62:8B:6A:F1:12:D3:C5:23:2A:FB:5B:B3:FA:CF:75:34
 ```
@@ -632,18 +665,18 @@ SHA256: F6:CE:B6:41:88:0C:C0:B9:ED:04:C0:48:26:5F:B7:5D:62:8B:6A:F1:12:D3:C5:23:
 
 ## End-to-End Timeline
 
-| Step | Component | Action | Time |
-|------|-----------|--------|------|
-| 1 | User | Clicks app in Okta | T+0ms |
-| 2 | Okta | Generates AuthnRequest, redirects to IdP | T+50ms |
-| 3 | IdP | Receives request, parses, shows form | T+150ms |
-| 4 | User | Selects device posture, submits | T+5000ms |
-| 5 | IdP | Creates DevicePosture object | T+5010ms |
-| 6 | IdP | Generates SAML response XML | T+5020ms |
-| 7 | IdP | Signs response with private key ⚠️ | T+5050ms |
-| 8 | IdP | Base64 encodes, returns HTML form | T+5060ms |
-| 9 | Browser | Auto-submits form to Okta | T+5100ms |
-| 10 | Okta | Validates signature ❌ FAILS HERE | T+5200ms |
+| Step | Component | Action                                   | Time     |
+| ---- | --------- | ---------------------------------------- | -------- |
+| 1    | User      | Clicks app in Okta                       | T+0ms    |
+| 2    | Okta      | Generates AuthnRequest, redirects to IdP | T+50ms   |
+| 3    | IdP       | Receives request, parses, shows form     | T+150ms  |
+| 4    | User      | Selects device posture, submits          | T+5000ms |
+| 5    | IdP       | Creates DevicePosture object             | T+5010ms |
+| 6    | IdP       | Generates SAML response XML              | T+5020ms |
+| 7    | IdP       | Signs response with private key ⚠️       | T+5050ms |
+| 8    | IdP       | Base64 encodes, returns HTML form        | T+5060ms |
+| 9    | Browser   | Auto-submits form to Okta                | T+5100ms |
+| 10   | Okta      | Validates signature ❌ FAILS HERE        | T+5200ms |
 
 ---
 

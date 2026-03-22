@@ -5,13 +5,18 @@ SAML 2.0 Identity Provider with Device Posture Extensions
 For Railway: Use gunicorn from Procfile, not Flask dev server
 """
 import sys
+import os
 import time
 from flask import Flask, request, render_template_string, redirect, make_response
-from config import Config
-from saml_handler import SAMLHandler
-from device_checker import DeviceChecker
-from logger_config import setup_logging, get_logger, log_request, log_saml_event, log_device_check, log_error
-from simple_saml import create_saml_response_simple
+
+# Add parent directory to path to import from examples
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src.config import Config
+from src.saml_handler import SAMLHandler
+from src.device_checker import DeviceChecker
+from src.logger_config import setup_logging, get_logger, log_request, log_saml_event, log_device_check, log_error
+from examples.simple_saml import create_saml_response_simple
 
 # Initialize logging
 setup_logging('okta-dpp')
