@@ -413,8 +413,8 @@ class SAMLHandler:
             # 4. Sign the Assertion node
             signed_assertion_node = signer.sign(
                 xml_element,
-                key=self.key.encode('utf-8'),
-                cert=self.cert.encode('utf-8'),
+                key=self.key.encode('utf-8').encode('utf-8'),
+                cert=self.cert.encode('utf-8').encode('utf-8'),
                 reference_uri=f"#{assertion_id}"
             )
 
