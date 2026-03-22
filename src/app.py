@@ -277,9 +277,6 @@ def index():
                     <a href="/saml/metadata">/saml/metadata</a>
                 </div>
                 <div class="endpoint">
-                    <strong>Device Registration:</strong><br>
-                </div>
-                <div class="endpoint">
                     <strong>Health Check:</strong><br>
                     <a href="/health">/health</a>
                 </div>
