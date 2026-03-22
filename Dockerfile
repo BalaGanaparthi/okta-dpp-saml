@@ -24,7 +24,7 @@ COPY . .
 RUN mkdir -p certs
 
 # Generate self-signed certificates (for development)
-RUN python generate_certs.py
+RUN python scripts/generate_certs.py
 
 # Expose port
 EXPOSE 8443
@@ -37,4 +37,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:8443/health')"
 
 # Run application
-CMD ["python", "app.py"]
+CMD ["python", "-m", "src.app"]
