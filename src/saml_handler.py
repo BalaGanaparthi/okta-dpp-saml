@@ -382,7 +382,7 @@ class SAMLHandler:
 
         return response_b64
 
-    def _sign_xml(self, xml_element, response_id):
+    def _sign_xml_x(self, xml_element, response_id):
         """Sign XML element using XMLSigner"""
         try:
             logger.debug("Signing XML with RSA-SHA256")
@@ -398,6 +398,35 @@ class SAMLHandler:
         except Exception as e:
             log_error(logger, e, "XML signing failed")
             return xml_element
+
+
+    def _sign_xml(self, xml_element, response_id):
+        """Sign XML element using XMLSigner"""
+        try:
+            logger.debug("Signing XML with RSA-SHA256 \w response_id = " + response_id)
+            signer = XMLSigner(
+                method=methods.enveloped,
+                signature_algorithm="rsa-sha256",
+                digest_algorithm="sha256",
+                c14n_algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"
+            )
+
+            # 4. Sign the Assertion node
+            signed_assertion_node = signer.sign(
+                xml_element,
+                key=self.key.encode('utf-8'),
+                cert=self.cert.encode('utf-8'),
+                reference_uri=f"#{response_id}"
+            )
+
+            logger.debug("✓ XML signature created successfully")
+            return signed
+        except Exception as e:
+            log_error(logger, e, "XML signing failed")
+            return xml_element
+
+
+            
 
     def get_metadata(self) -> str:
         """Generate SAML metadata XML for the IdP"""
