@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.config import Config
 from src.saml_handler import SAMLHandler
-from src.device_checker import DeviceChecker
+from src.models import DevicePosture
 from src.logger_config import setup_logging, get_logger, log_request, log_saml_event, log_device_check, log_error
 from examples.simple_saml import create_saml_response_simple
 
@@ -31,7 +31,6 @@ config = Config()
 
 # Initialize handlers
 saml_handler = SAMLHandler(config)
-device_checker = DeviceChecker(config)
 
 
 # HTML Templates
@@ -279,7 +278,6 @@ def index():
                 </div>
                 <div class="endpoint">
                     <strong>Device Registration:</strong><br>
-                    <a href="/admin/devices">/admin/devices</a>
                 </div>
                 <div class="endpoint">
                     <strong>Health Check:</strong><br>
@@ -352,8 +350,7 @@ def sso():
 
         logger.info(f"✅ Device posture submission accepted: user={user_id}, managed={is_managed}, compliant={is_compliant}")
 
-        # Create device posture object with user's selections
-        from device_checker import DevicePosture
+        # Create device posture object with user's selections (no actual checking)
         device_posture = DevicePosture(
             device_id='user-device',
             vendor='Unknown',
@@ -440,92 +437,6 @@ def metadata():
         log_error(logger, e, "Metadata generation failed")
         log_request(logger, 'GET', '/saml/metadata', 500, duration_ms)
         return f"Failed to generate metadata: {str(e)}", 500
-
-
-@app.route('/admin/devices', methods=['GET', 'POST'])
-def admin_devices():
-    """Device registration admin interface"""
-    start_time = time.time()
-
-    if request.method == 'POST':
-        device_id = request.form.get('device_id')
-        device_info = {
-            'managed': request.form.get('managed') == 'true',
-            'encrypted': request.form.get('encrypted') == 'true',
-            'last_sync': request.form.get('last_sync', '')
-        }
-        logger.info(f"Registering device: {device_id}, managed={device_info['managed']}, encrypted={device_info['encrypted']}")
-        device_checker.register_device(device_id, device_info)
-        message = f"Device {device_id} registered successfully"
-        duration_ms = (time.time() - start_time) * 1000
-        log_request(logger, 'POST', '/admin/devices', 200, duration_ms)
-    else:
-        message = None
-        duration_ms = (time.time() - start_time) * 1000
-        log_request(logger, 'GET', '/admin/devices', 200, duration_ms)
-
-    # List registered devices
-    devices_html = ""
-    for dev_id, dev_info in device_checker.device_registry.items():
-        devices_html += f"""
-        <tr>
-            <td>{dev_id}</td>
-            <td>{'✅' if dev_info.get('managed') else '❌'}</td>
-            <td>{'✅' if dev_info.get('encrypted') else '❌'}</td>
-            <td>{dev_info.get('last_sync', 'N/A')}</td>
-        </tr>
-        """
-
-    return f"""
-    <html>
-    <head>
-        <title>Device Management</title>
-        <style>
-            body {{ font-family: Arial, sans-serif; margin: 40px; }}
-            table {{ border-collapse: collapse; width: 100%; margin: 20px 0; }}
-            th, td {{ border: 1px solid #ddd; padding: 12px; text-align: left; }}
-            th {{ background: #667eea; color: white; }}
-            input, select {{ padding: 8px; margin: 5px; }}
-            button {{ padding: 10px 20px; background: #667eea; color: white; border: none; cursor: pointer; }}
-            .success {{ background: #dff0d8; padding: 15px; margin: 20px 0; border-radius: 5px; }}
-        </style>
-    </head>
-    <body>
-        <h1>Device Management</h1>
-
-        {'<div class="success">' + message + '</div>' if message else ''}
-
-        <h2>Register New Device</h2>
-        <form method="POST">
-            <input type="text" name="device_id" placeholder="Device ID" required>
-            <select name="managed">
-                <option value="true">Managed</option>
-                <option value="false">Not Managed</option>
-            </select>
-            <select name="encrypted">
-                <option value="true">Encrypted</option>
-                <option value="false">Not Encrypted</option>
-            </select>
-            <input type="datetime-local" name="last_sync">
-            <button type="submit">Register Device</button>
-        </form>
-
-        <h2>Registered Devices</h2>
-        <table>
-            <tr>
-                <th>Device ID</th>
-                <th>Managed</th>
-                <th>Encrypted</th>
-                <th>Last Sync</th>
-            </tr>
-            {devices_html if devices_html else '<tr><td colspan="4">No devices registered</td></tr>'}
-        </table>
-
-        <br>
-        <a href="/">← Back to Home</a>
-    </body>
-    </html>
-    """
 
 
 @app.route('/health')
