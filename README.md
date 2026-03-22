@@ -350,7 +350,7 @@ def check_device_posture(self, device_id, ...):
 ```
 SAML certificates not found
 ```
-**Solution:** Run `python generate_certs.py` to generate certificates.
+**Solution:** Run `python3 scripts/gen_x509v3.py` to generate certificates.
 
 ### Device Not Managed Error
 ```

@@ -580,7 +580,7 @@ if __name__ == '__main__':
         logger.info("✅ SAML certificates loaded successfully")
     else:
         logger.warning("⚠️  SAML certificates not found. SAML responses will NOT be signed.")
-        logger.warning("    Generate certificates using: python generate_certs.py")
+        logger.warning("    Generate certificates using: python3 scripts/gen_x509v3.py")
 
     # Device check configuration
     logger.info(f"Device checks - Require Managed: {config.get('device_checks.require_managed')}")
