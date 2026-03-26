@@ -59,7 +59,7 @@ class DeviceChecker:
             f"Encrypted: {device_info.get('encrypted', False)}"
         )
 
-    def check_device_posture(self, device_id: str, vendor: str, model: str,
+    def DevicePosture(self, device_id: str, vendor: str, model: str,
                             os: str, os_version: str, user_id: str) -> DevicePosture:
         """
         Check device posture and return compliance status

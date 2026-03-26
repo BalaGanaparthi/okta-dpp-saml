@@ -46,14 +46,8 @@ SAML_RESPONSE_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
                 <saml:AuthnContextDecl>
                     <AuthenticationContextDeclaration xmlns="urn:okta:saml:2.0:DevicePosture">
                         <Extension>
-                            <Device xmlns="urn:okta:saml:2.0:DevicePosture"
-                                    ID="{device_id}"
-                                    Vendor="TestDPP"
-                                    Model="Simulator"
-                                    OS="TestOS"
-                                    OSVersion="1.0">
+                            <Device xmlns="urn:okta:saml:2.0:DevicePosture">
                                 <Posture>
-                                    <Fact Name="IsManaged" Value="{is_managed}"/>
                                     <Fact Name="IsCompliant" Value="{is_compliant}"/>
                                 </Posture>
                             </Device>
