@@ -7,7 +7,8 @@ For Railway: Use gunicorn from Procfile, not Flask dev server
 import sys
 import os
 import time
-from flask import Flask, request, render_template_string, redirect, make_response
+import json
+from flask import Flask, request, render_template_string, redirect, make_response, jsonify
 
 # Add parent directory to path to import from examples
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -277,6 +278,10 @@ def index():
                     <a href="/saml/metadata">/saml/metadata</a>
                 </div>
                 <div class="endpoint">
+                    <strong>JWKS (Public Keys):</strong><br>
+                    <a href="/.well-known/jwks.json">/.well-known/jwks.json</a>
+                </div>
+                <div class="endpoint">
                     <strong>Health Check:</strong><br>
                     <a href="/health">/health</a>
                 </div>
@@ -452,6 +457,45 @@ def health():
     log_request(logger, 'GET', '/health', 200, duration_ms)
 
     return health_status
+
+
+@app.route('/.well-known/jwks.json')
+def jwks():
+    """JWKS endpoint - serves the public key in JWKS format"""
+    start_time = time.time()
+    try:
+        # Read the public key from pub.json
+        pub_json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'certs', 'pub.json')
+        logger.debug(f"Reading JWKS from {pub_json_path}")
+
+        with open(pub_json_path, 'r') as f:
+            jwk = json.load(f)
+
+        # JWKS format requires a "keys" array
+        jwks_response = {
+            "keys": [jwk]
+        }
+
+        duration_ms = (time.time() - start_time) * 1000
+        log_request(logger, 'GET', '/.well-known/jwks.json', 200, duration_ms)
+        logger.info(f"JWKS served successfully (kid: {jwk.get('kid', 'unknown')})")
+
+        response = jsonify(jwks_response)
+        response.headers['Content-Type'] = 'application/json'
+        response.headers['Access-Control-Allow-Origin'] = '*'  # Allow CORS for public key
+        return response
+
+    except FileNotFoundError:
+        duration_ms = (time.time() - start_time) * 1000
+        log_error(logger, FileNotFoundError(f"pub.json not found at {pub_json_path}"), "JWKS file not found")
+        log_request(logger, 'GET', '/.well-known/jwks.json', 404, duration_ms)
+        return jsonify({"error": "JWKS not found"}), 404
+
+    except Exception as e:
+        duration_ms = (time.time() - start_time) * 1000
+        log_error(logger, e, "Failed to serve JWKS")
+        log_request(logger, 'GET', '/.well-known/jwks.json', 500, duration_ms)
+        return jsonify({"error": "Failed to load JWKS"}), 500
 
 
 # Request logging middleware
